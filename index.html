@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+
+  <title>Ramallah GIS Map</title>
+
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet"
+    href="https://unpkg.com/leaflet/dist/leaflet.css"/>
+
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+    }
+
+    #map {
+      width: 100%;
+      height: 100vh;
+    }
+
+    .leaflet-popup-content {
+      max-height: 250px;
+      overflow-y: auto;
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+
+<div id="map"></div>
+
+<!-- Leaflet JS -->
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
+<script>
+
+//////////////////////////////////////////////////////////
+// إنشاء الخريطة
+//////////////////////////////////////////////////////////
+
+const map = L.map('map').setView([31.9038, 35.2034], 12);
+
+//////////////////////////////////////////////////////////
+// Base Map
+//////////////////////////////////////////////////////////
+
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '&copy; OpenStreetMap'
+}).addTo(map);
+
+//////////////////////////////////////////////////////////
+// روابط ملفات GeoJSON من GitHub
+//////////////////////////////////////////////////////////
+
+const githubBase =
+'https://raw.githubusercontent.com/YOUR_USERNAME/YOUR_REPO/main/';
+
+//////////////////////////////////////////////////////////
+// Function لإنشاء Popup تلقائي
+//////////////////////////////////////////////////////////
+
+function createPopupContent(properties) {
+
+    let content = "<table>";
+
+    for (let key in properties) {
+
+        content += `
+          <tr>
+            <td><b>${key}</b></td>
+            <td>${properties[key]}</td>
+          </tr>
+        `;
+    }
+
+    content += "</table>";
+
+    return content;
+}
+
+//////////////////////////////////////////////////////////
+// Function لتحميل أي Layer
+//////////////////////////////////////////////////////////
+
+function loadGeoJSON(url, styleOptions) {
+
+    return fetch(url)
+      .then(response => response.json())
+      .then(data => {
+
+          return L.geoJSON(data, {
+
+              style: styleOptions,
+
+              pointToLayer: function(feature, latlng) {
+
+                  return L.circleMarker(latlng, {
+                      radius: 6,
+                      fillColor: styleOptions.color,
+                      color: "#000",
+                      weight: 1,
+                      opacity: 1,
+                      fillOpacity: 0.8
+                  });
+              },
+
+              onEachFeature: function(feature, layer) {
+
+                  if (feature.properties) {
+
+                      layer.bindPopup(
+                        createPopupContent(feature.properties),
+                        {
+                          maxWidth: 300,
+                          keepInView: true
+                        }
+                      );
+                  }
+              }
+
+          });
+      });
+}
+
+//////////////////////////////////////////////////////////
+// تحميل Layers
+//////////////////////////////////////////////////////////
+
+Promise.all([
+
+    loadGeoJSON(
+      githubBase + 'Health_Services.json',
+      {
+        color: 'red',
+        weight: 2,
+        fillOpacity: 0.5
+      }
+    ),
+
+    loadGeoJSON(
+      githubBase + 'Living.json',
+      {
+        color: 'orange',
+        weight: 2,
+        fillOpacity: 0.4
+      }
+    ),
+
+    loadGeoJSON(
+      githubBase + 'Parking.json',
+      {
+        color: 'blue',
+        weight: 2,
+        fillOpacity: 0.5
+      }
+    ),
+
+    loadGeoJSON(
+      githubBase + 'Ramallah_Boundary.json',
+      {
+        color: 'black',
+        weight: 3,
+        fillOpacity: 0.1
+      }
+    ),
+
+    loadGeoJSON(
+      githubBase + 'Road_Network.json',
+      {
+        color: 'green',
+        weight: 2
+      }
+    )
+
+]).then(layers => {
+
+    //////////////////////////////////////////////////////
+    // إضافة Layers للخريطة
+    //////////////////////////////////////////////////////
+
+    const [
+      healthLayer,
+      livingLayer,
+      parkingLayer,
+      boundaryLayer,
+      roadsLayer
+    ] = layers;
+
+    healthLayer.addTo(map);
+    livingLayer.addTo(map);
+    parkingLayer.addTo(map);
+    boundaryLayer.addTo(map);
+    roadsLayer.addTo(map);
+
+    //////////////////////////////////////////////////////
+    // Layer Control Box
+    //////////////////////////////////////////////////////
+
+    const overlayMaps = {
+        "Health Services": healthLayer,
+        "Living": livingLayer,
+        "Parking": parkingLayer,
+        "Ramallah Boundary": boundaryLayer,
+        "Road Network": roadsLayer
+    };
+
+    L.control.layers(null, overlayMaps, {
+        collapsed: false
+    }).addTo(map);
+
+    //////////////////////////////////////////////////////
+    // Zoom على حدود رام الله
+    //////////////////////////////////////////////////////
+
+    map.fitBounds(boundaryLayer.getBounds());
+
+});
+
+</script>
+
+</body>
+</html>
