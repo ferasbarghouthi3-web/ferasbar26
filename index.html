@@ -5,22 +5,34 @@
   <title>Ramallah Web GIS</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+  <!-- LEAFLET -->
+  <link rel="stylesheet"
+  href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+
+  <!-- DARK MODE MAP -->
+  <link rel="stylesheet"
+  href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.fullscreen/2.4.0/Control.FullScreen.min.css"/>
 
   <style>
-    html, body {
-      height: 100%;
-      margin: 0;
+
+    html, body{
+      height:100%;
+      margin:0;
+      font-family:Arial, sans-serif;
     }
 
-    #map {
-      width: 100%;
-      height: 100%;
+    #map{
+      width:100%;
+      height:100%;
     }
+
+    /* =========================
+        POPUP
+    ========================== */
 
     .popup-table{
-      border-collapse: collapse;
-      width: 100%;
+      border-collapse:collapse;
+      width:100%;
     }
 
     .popup-table td{
@@ -34,10 +46,14 @@
       margin-bottom:6px;
     }
 
+    /* =========================
+        LEGEND
+    ========================== */
+
     .legend{
       background:white;
       padding:10px;
-      border-radius:8px;
+      border-radius:10px;
       box-shadow:0 0 10px rgba(0,0,0,0.3);
       font-size:13px;
       line-height:20px;
@@ -49,6 +65,23 @@
       display:inline-block;
       margin-right:6px;
     }
+
+    /* =========================
+        DARK MODE BUTTON
+    ========================== */
+
+    .dark-btn{
+
+      background:white;
+      padding:8px 12px;
+      border-radius:8px;
+      cursor:pointer;
+      font-size:13px;
+      font-weight:bold;
+      box-shadow:0 0 8px rgba(0,0,0,0.3);
+
+    }
+
   </style>
 </head>
 
@@ -56,6 +89,7 @@
 
 <div id="map"></div>
 
+<!-- LEAFLET -->
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
 <script>
@@ -66,12 +100,25 @@
 
   var map = L.map("map").setView([31.9038, 35.2034], 11);
 
-  L.tileLayer(
+  /* =========================
+      BASEMAPS
+  ========================== */
+
+  // الوضع العادي
+  var lightMap = L.tileLayer(
     "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
     {
-      attribution: "&copy; OpenStreetMap"
+      attribution:"&copy; OpenStreetMap"
     }
   ).addTo(map);
+
+  // الوضع الليلي
+  var darkMap = L.tileLayer(
+    "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",
+    {
+      attribution:"&copy; CARTO"
+    }
+  );
 
   /* =========================
       POPUP FUNCTION
@@ -87,6 +134,7 @@
     `;
 
     for(let key in feature.properties){
+
       html += `
         <tr>
           <td><b>${key}</b></td>
@@ -129,13 +177,13 @@
     ] = data;
 
     /* =========================
-        RAMALLAH BOUNDARY
+        BOUNDARY
     ========================== */
 
     var boundaryLayer = L.geoJSON(boundary, {
 
       style:{
-        color:"#000000",
+        color:"#ffffff",
         weight:3,
         fillOpacity:0
       },
@@ -145,37 +193,35 @@
     }).addTo(map);
 
     /* =========================
-        ROAD NETWORK
-        تصنيف الشوارع حسب النوع
+        ROADS
     ========================== */
 
     var roadsLayer = L.geoJSON(roads, {
 
       style:function(feature){
 
-        // اسم الحقل الموجود في الاتريبيوت
-        // عدله إذا كان مختلف عندك
         let roadType = feature.properties.type;
 
-        // شوارع إقليمية
+        // اقليمي
         if(
           roadType === "Regional" ||
           roadType === "اقليمي"
         ){
+
           return{
             color:"#ff3300",
             weight:5
           };
         }
 
-        // شوارع داخلية
+        // داخلي
         else{
+
           return{
-            color:"#ff9900",
+            color:"#ffaa00",
             weight:2
           };
         }
-
       },
 
       onEachFeature: popupAttributes
@@ -184,13 +230,12 @@
 
     /* =========================
         LIVING
-        بوردر فقط بدون تعبئة
     ========================== */
 
     var livingLayer = L.geoJSON(living, {
 
       style:{
-        color:"#0066cc",
+        color:"#00bfff",
         weight:2,
         fillOpacity:0
       },
@@ -201,7 +246,6 @@
 
     /* =========================
         PARKING
-        لون سكني غامق
     ========================== */
 
     var parkingLayer = L.geoJSON(parking, {
@@ -223,16 +267,15 @@
 
     var healthLayer = L.geoJSON(health, {
 
-      pointToLayer: function(feature, latlng){
+      pointToLayer:function(feature, latlng){
 
         return L.circleMarker(latlng, {
 
-          radius: 6,
-          fillColor: "#ff0000",
-          color: "#800000",
-          weight: 1,
-          opacity: 1,
-          fillOpacity: 0.9
+          radius:6,
+          fillColor:"#ff0000",
+          color:"#ffffff",
+          weight:1,
+          fillOpacity:0.9
 
         });
 
@@ -252,15 +295,20 @@
         LAYER CONTROL
     ========================== */
 
-    L.control.layers(null, {
+    var baseMaps = {
+      "Light Mode": lightMap,
+      "Dark Mode": darkMap
+    };
 
+    var overlayMaps = {
       "Ramallah Boundary": boundaryLayer,
       "Road Network": roadsLayer,
       "Living Areas": livingLayer,
       "Parking": parkingLayer,
       "Health Services": healthLayer
+    };
 
-    }, {
+    L.control.layers(baseMaps, overlayMaps, {
 
       collapsed:false
 
@@ -277,11 +325,12 @@
       var div = L.DomUtil.create("div","legend");
 
       div.innerHTML = `
+
         <b>Legend</b><br><br>
 
         <div>
           <span class="legend-box"
-          style="border:2px solid #0066cc;background:white;">
+          style="border:2px solid #00bfff;background:black;">
           </span>
           Living Areas
         </div>
@@ -295,7 +344,7 @@
 
         <div>
           <span class="legend-box"
-          style="background:#ff9900;">
+          style="background:#ffaa00;">
           </span>
           Internal Roads
         </div>
@@ -316,7 +365,7 @@
 
         <div>
           <span class="legend-box"
-          style="background:#000;">
+          style="background:#ffffff;">
           </span>
           Ramallah Boundary
         </div>
