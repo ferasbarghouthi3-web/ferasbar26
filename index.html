@@ -146,13 +146,36 @@
 
     /* =========================
         ROAD NETWORK
+        تصنيف الشوارع حسب النوع
     ========================== */
 
     var roadsLayer = L.geoJSON(roads, {
 
-      style:{
-        color:"#ff6600",
-        weight:2
+      style:function(feature){
+
+        // اسم الحقل الموجود في الاتريبيوت
+        // عدله إذا كان مختلف عندك
+        let roadType = feature.properties.type;
+
+        // شوارع إقليمية
+        if(
+          roadType === "Regional" ||
+          roadType === "اقليمي"
+        ){
+          return{
+            color:"#ff3300",
+            weight:5
+          };
+        }
+
+        // شوارع داخلية
+        else{
+          return{
+            color:"#ff9900",
+            weight:2
+          };
+        }
+
       },
 
       onEachFeature: popupAttributes
@@ -161,15 +184,15 @@
 
     /* =========================
         LIVING
+        بوردر فقط بدون تعبئة
     ========================== */
 
     var livingLayer = L.geoJSON(living, {
 
       style:{
         color:"#0066cc",
-        weight:1.5,
-        fillColor:"#4da6ff",
-        fillOpacity:0.5
+        weight:2,
+        fillOpacity:0
       },
 
       onEachFeature: popupAttributes
@@ -178,15 +201,16 @@
 
     /* =========================
         PARKING
+        لون سكني غامق
     ========================== */
 
     var parkingLayer = L.geoJSON(parking, {
 
       style:{
-        color:"#800080",
+        color:"#1b5e20",
         weight:1.5,
-        fillColor:"#cc66ff",
-        fillOpacity:0.7
+        fillColor:"#2e7d32",
+        fillOpacity:0.8
       },
 
       onEachFeature: popupAttributes
@@ -230,11 +254,11 @@
 
     L.control.layers(null, {
 
-      "Health_Services.json": healthLayer,
-      "Living.json": livingLayer,
-      "Parking.json": parkingLayer,
-      "Ramallah_Boundary.json": boundaryLayer,
-      "Road_Network.json": roadsLayer
+      "Ramallah Boundary": boundaryLayer,
+      "Road Network": roadsLayer,
+      "Living Areas": livingLayer,
+      "Parking": parkingLayer,
+      "Health Services": healthLayer
 
     }, {
 
@@ -256,28 +280,45 @@
         <b>Legend</b><br><br>
 
         <div>
-          <span class="legend-box" style="background:#ff0000;border-radius:50%;"></span>
-          Health_Services.json
+          <span class="legend-box"
+          style="border:2px solid #0066cc;background:white;">
+          </span>
+          Living Areas
         </div>
 
         <div>
-          <span class="legend-box" style="background:#4da6ff;border:1px solid #0066cc;"></span>
-          Living.json
+          <span class="legend-box"
+          style="background:#ff3300;">
+          </span>
+          Regional Roads
         </div>
 
         <div>
-          <span class="legend-box" style="background:#cc66ff;border:1px solid #800080;"></span>
-          Parking.json
+          <span class="legend-box"
+          style="background:#ff9900;">
+          </span>
+          Internal Roads
         </div>
 
         <div>
-          <span class="legend-box" style="background:#000;"></span>
-          Ramallah_Boundary.json
+          <span class="legend-box"
+          style="background:#2e7d32;border:1px solid #1b5e20;">
+          </span>
+          Parking
         </div>
 
         <div>
-          <span class="legend-box" style="background:#ff6600;"></span>
-          Road_Network.json
+          <span class="legend-box"
+          style="background:#ff0000;border-radius:50%;">
+          </span>
+          Health Services
+        </div>
+
+        <div>
+          <span class="legend-box"
+          style="background:#000;">
+          </span>
+          Ramallah Boundary
         </div>
       `;
 
