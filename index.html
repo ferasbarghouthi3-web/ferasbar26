@@ -160,7 +160,7 @@
     }).addTo(map);
 
     /* =========================
-        LIVING AREAS
+        LIVING
     ========================== */
 
     var livingLayer = L.geoJSON(living, {
@@ -230,11 +230,11 @@
 
     L.control.layers(null, {
 
-      "Ramallah Boundary": boundaryLayer,
-      "Road Network": roadsLayer,
-      "Living Areas": livingLayer,
-      "Parking": parkingLayer,
-      "Health Services": healthLayer
+      "Health_Services.json": healthLayer,
+      "Living.json": livingLayer,
+      "Parking.json": parkingLayer,
+      "Ramallah_Boundary.json": boundaryLayer,
+      "Road_Network.json": roadsLayer
 
     }, {
 
@@ -256,28 +256,28 @@
         <b>Legend</b><br><br>
 
         <div>
-          <span class="legend-box" style="background:#4da6ff;border:1px solid #0066cc;"></span>
-          Living Areas
+          <span class="legend-box" style="background:#ff0000;border-radius:50%;"></span>
+          Health_Services.json
         </div>
 
         <div>
-          <span class="legend-box" style="background:#ff6600;"></span>
-          Road Network
+          <span class="legend-box" style="background:#4da6ff;border:1px solid #0066cc;"></span>
+          Living.json
         </div>
 
         <div>
           <span class="legend-box" style="background:#cc66ff;border:1px solid #800080;"></span>
-          Parking
-        </div>
-
-        <div>
-          <span class="legend-box" style="background:#ff0000;border-radius:50%;"></span>
-          Health Services
+          Parking.json
         </div>
 
         <div>
           <span class="legend-box" style="background:#000;"></span>
-          Ramallah Boundary
+          Ramallah_Boundary.json
+        </div>
+
+        <div>
+          <span class="legend-box" style="background:#ff6600;"></span>
+          Road_Network.json
         </div>
       `;
 
