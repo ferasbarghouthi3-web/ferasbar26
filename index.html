@@ -1,223 +1,264 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <meta charset="utf-8" />
+    <title>Ramallah GIS Map</title>
 
-  <title>Ramallah GIS Map</title>
+    <link rel="stylesheet"
+    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 
-  <!-- Leaflet CSS -->
-  <link rel="stylesheet"
-    href="https://unpkg.com/leaflet/dist/leaflet.css"/>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
-  <style>
-    body {
-      margin: 0;
-      padding: 0;
-    }
+    <style>
 
-    #map {
-      width: 100%;
-      height: 100vh;
-    }
+        body{
+            margin:0;
+            padding:0;
+        }
 
-    .leaflet-popup-content {
-      max-height: 250px;
-      overflow-y: auto;
-      font-size: 14px;
-    }
-  </style>
+        #map{
+            width:100%;
+            height:100vh;
+        }
+
+    </style>
 </head>
+
 <body>
 
 <div id="map"></div>
 
-<!-- Leaflet JS -->
-<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
-
 <script>
 
-//////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////
 // إنشاء الخريطة
-//////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////
 
-const map = L.map('map').setView([31.9038, 35.2034], 12);
+var map = L.map('map').setView([31.9,35.2], 12);
 
-//////////////////////////////////////////////////////////
-// Base Map
-//////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////
+// BaseMap
+/////////////////////////////////////////////////////
 
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    attribution: '&copy; OpenStreetMap'
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
+    attribution:'OpenStreetMap'
 }).addTo(map);
 
-//////////////////////////////////////////////////////////
-// روابط ملفات GeoJSON من GitHub
-//////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////
+// روابط ملفات GitHub
+/////////////////////////////////////////////////////
 
-const githubBase =
-'https://raw.githubusercontent.com/YOUR_USERNAME/YOUR_REPO/main/';
+var HealthURL =
+'https://raw.githubusercontent.com/YOUR_USERNAME/YOUR_REPO/main/Health_Services.json';
 
-//////////////////////////////////////////////////////////
-// Function لإنشاء Popup تلقائي
-//////////////////////////////////////////////////////////
+var LivingURL =
+'https://raw.githubusercontent.com/YOUR_USERNAME/YOUR_REPO/main/Living.json';
 
-function createPopupContent(properties) {
+var ParkingURL =
+'https://raw.githubusercontent.com/YOUR_USERNAME/YOUR_REPO/main/Parking.json';
 
-    let content = "<table>";
+var BoundaryURL =
+'https://raw.githubusercontent.com/YOUR_USERNAME/YOUR_REPO/main/Ramallah_Boundary.json';
 
-    for (let key in properties) {
+var RoadsURL =
+'https://raw.githubusercontent.com/YOUR_USERNAME/YOUR_REPO/main/Road_Network.json';
 
-        content += `
-          <tr>
-            <td><b>${key}</b></td>
-            <td>${properties[key]}</td>
-          </tr>
-        `;
+/////////////////////////////////////////////////////
+// Layers
+/////////////////////////////////////////////////////
+
+var healthLayer;
+var livingLayer;
+var parkingLayer;
+var boundaryLayer;
+var roadsLayer;
+
+/////////////////////////////////////////////////////
+// Popup Function
+/////////////////////////////////////////////////////
+
+function popupContent(properties){
+
+    var text = "";
+
+    for(var key in properties){
+
+        text += "<b>" + key + "</b>: "
+        + properties[key] + "<br>";
+
     }
 
-    content += "</table>";
-
-    return content;
+    return text;
 }
 
-//////////////////////////////////////////////////////////
-// Function لتحميل أي Layer
-//////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////
+// تحميل Health Services
+/////////////////////////////////////////////////////
 
-function loadGeoJSON(url, styleOptions) {
+fetch(HealthURL)
+.then(res => res.json())
+.then(data => {
 
-    return fetch(url)
-      .then(response => response.json())
-      .then(data => {
+    healthLayer = L.geoJSON(data,{
 
-          return L.geoJSON(data, {
+        pointToLayer:function(feature,latlng){
 
-              style: styleOptions,
+            return L.circleMarker(latlng,{
+                radius:6,
+                fillColor:"red",
+                color:"black",
+                weight:1,
+                fillOpacity:0.8
+            });
 
-              pointToLayer: function(feature, latlng) {
+        },
 
-                  return L.circleMarker(latlng, {
-                      radius: 6,
-                      fillColor: styleOptions.color,
-                      color: "#000",
-                      weight: 1,
-                      opacity: 1,
-                      fillOpacity: 0.8
-                  });
-              },
+        onEachFeature:function(feature,layer){
 
-              onEachFeature: function(feature, layer) {
+            layer.bindPopup(
+                popupContent(feature.properties)
+            );
 
-                  if (feature.properties) {
+        }
 
-                      layer.bindPopup(
-                        createPopupContent(feature.properties),
-                        {
-                          maxWidth: 300,
-                          keepInView: true
-                        }
-                      );
-                  }
-              }
-
-          });
-      });
-}
-
-//////////////////////////////////////////////////////////
-// تحميل Layers
-//////////////////////////////////////////////////////////
-
-Promise.all([
-
-    loadGeoJSON(
-      githubBase + 'Health_Services.json',
-      {
-        color: 'red',
-        weight: 2,
-        fillOpacity: 0.5
-      }
-    ),
-
-    loadGeoJSON(
-      githubBase + 'Living.json',
-      {
-        color: 'orange',
-        weight: 2,
-        fillOpacity: 0.4
-      }
-    ),
-
-    loadGeoJSON(
-      githubBase + 'Parking.json',
-      {
-        color: 'blue',
-        weight: 2,
-        fillOpacity: 0.5
-      }
-    ),
-
-    loadGeoJSON(
-      githubBase + 'Ramallah_Boundary.json',
-      {
-        color: 'black',
-        weight: 3,
-        fillOpacity: 0.1
-      }
-    ),
-
-    loadGeoJSON(
-      githubBase + 'Road_Network.json',
-      {
-        color: 'green',
-        weight: 2
-      }
-    )
-
-]).then(layers => {
-
-    //////////////////////////////////////////////////////
-    // إضافة Layers للخريطة
-    //////////////////////////////////////////////////////
-
-    const [
-      healthLayer,
-      livingLayer,
-      parkingLayer,
-      boundaryLayer,
-      roadsLayer
-    ] = layers;
-
-    healthLayer.addTo(map);
-    livingLayer.addTo(map);
-    parkingLayer.addTo(map);
-    boundaryLayer.addTo(map);
-    roadsLayer.addTo(map);
-
-    //////////////////////////////////////////////////////
-    // Layer Control Box
-    //////////////////////////////////////////////////////
-
-    const overlayMaps = {
-        "Health Services": healthLayer,
-        "Living": livingLayer,
-        "Parking": parkingLayer,
-        "Ramallah Boundary": boundaryLayer,
-        "Road Network": roadsLayer
-    };
-
-    L.control.layers(null, overlayMaps, {
-        collapsed: false
     }).addTo(map);
 
-    //////////////////////////////////////////////////////
-    // Zoom على حدود رام الله
-    //////////////////////////////////////////////////////
+});
+
+/////////////////////////////////////////////////////
+// تحميل Living
+/////////////////////////////////////////////////////
+
+fetch(LivingURL)
+.then(res => res.json())
+.then(data => {
+
+    livingLayer = L.geoJSON(data,{
+
+        style:{
+            color:"orange",
+            weight:2,
+            fillOpacity:0.4
+        },
+
+        onEachFeature:function(feature,layer){
+
+            layer.bindPopup(
+                popupContent(feature.properties)
+            );
+
+        }
+
+    }).addTo(map);
+
+});
+
+/////////////////////////////////////////////////////
+// تحميل Parking
+/////////////////////////////////////////////////////
+
+fetch(ParkingURL)
+.then(res => res.json())
+.then(data => {
+
+    parkingLayer = L.geoJSON(data,{
+
+        style:{
+            color:"blue",
+            weight:2,
+            fillOpacity:0.5
+        },
+
+        onEachFeature:function(feature,layer){
+
+            layer.bindPopup(
+                popupContent(feature.properties)
+            );
+
+        }
+
+    }).addTo(map);
+
+});
+
+/////////////////////////////////////////////////////
+// تحميل Boundary
+/////////////////////////////////////////////////////
+
+fetch(BoundaryURL)
+.then(res => res.json())
+.then(data => {
+
+    boundaryLayer = L.geoJSON(data,{
+
+        style:{
+            color:"black",
+            weight:3,
+            fillOpacity:0
+        },
+
+        onEachFeature:function(feature,layer){
+
+            layer.bindPopup(
+                popupContent(feature.properties)
+            );
+
+        }
+
+    }).addTo(map);
 
     map.fitBounds(boundaryLayer.getBounds());
 
 });
+
+/////////////////////////////////////////////////////
+// تحميل Roads
+/////////////////////////////////////////////////////
+
+fetch(RoadsURL)
+.then(res => res.json())
+.then(data => {
+
+    roadsLayer = L.geoJSON(data,{
+
+        style:{
+            color:"green",
+            weight:2
+        },
+
+        onEachFeature:function(feature,layer){
+
+            layer.bindPopup(
+                popupContent(feature.properties)
+            );
+
+        }
+
+    }).addTo(map);
+
+});
+
+/////////////////////////////////////////////////////
+// Layer Control
+/////////////////////////////////////////////////////
+
+setTimeout(function(){
+
+    var overlays = {
+
+        "Health Services": healthLayer,
+        "Living": livingLayer,
+        "Parking": parkingLayer,
+        "Boundary": boundaryLayer,
+        "Road Network": roadsLayer
+
+    };
+
+    L.control.layers(null,overlays,{
+        collapsed:false
+    }).addTo(map);
+
+},3000);
 
 </script>
 
