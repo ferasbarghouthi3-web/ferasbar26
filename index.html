@@ -2,175 +2,206 @@
 <html lang="ar">
 <head>
 
-  <meta charset="UTF-8" />
+<meta charset="UTF-8">
 
-  <title>Ramallah Web GIS</title>
+<meta name="viewport"
+content="width=device-width, initial-scale=1.0"/>
 
-  <meta name="viewport"
-  content="width=device-width, initial-scale=1.0"/>
+<title>Ramallah Advanced Web GIS</title>
 
-  <!-- LEAFLET -->
-  <link rel="stylesheet"
-  href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<!-- LEAFLET -->
+<link rel="stylesheet"
+href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 
-  <!-- ROUTING -->
-  <link rel="stylesheet"
-  href="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.css"/>
+<!-- ROUTING -->
+<link rel="stylesheet"
+href="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.css"/>
 
-  <style>
+<!-- GEOCODER -->
+<link rel="stylesheet"
+href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css"/>
 
-    html,body{
+<!-- DRAW -->
+<link rel="stylesheet"
+href="https://unpkg.com/leaflet-draw/dist/leaflet.draw.css"/>
 
-      margin:0;
-      height:100%;
-      font-family:Arial,sans-serif;
+<!-- FULLSCREEN -->
+<link rel="stylesheet"
+href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.fullscreen/2.4.0/Control.FullScreen.min.css"/>
 
-    }
+<!-- AWESOME ICONS -->
+<link rel="stylesheet"
+href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"/>
 
-    #map{
+<!-- MINI MAP -->
+<link rel="stylesheet"
+href="https://unpkg.com/leaflet-minimap/dist/Control.MiniMap.min.css"/>
 
-      width:100%;
-      height:100%;
+<style>
 
-    }
+html,body{
 
-    /* =========================
-        SEARCH BOX
-    ========================== */
+height:100%;
+margin:0;
+font-family:Arial,sans-serif;
 
-    .control-box{
+}
 
-      position:absolute;
+#map{
 
-      bottom:20px;
-      right:20px;
+width:100%;
+height:100%;
 
-      z-index:1000;
+}
 
-      background:white;
+/* =========================
+    SEARCH BOX
+========================== */
 
-      padding:12px;
+.control-box{
 
-      border-radius:10px;
+position:absolute;
 
-      box-shadow:0 0 10px rgba(0,0,0,0.3);
+bottom:20px;
+right:20px;
 
-      width:240px;
+z-index:1000;
 
-    }
+background:white;
 
-    .control-box h3{
+padding:12px;
 
-      margin-top:0;
-      font-size:16px;
+border-radius:10px;
 
-    }
+box-shadow:0 0 10px rgba(0,0,0,0.3);
 
-    .control-box select,
-    .control-box button{
+width:250px;
 
-      width:100%;
-      padding:8px;
-      margin-top:8px;
+}
 
-    }
+.control-box h3{
 
-    .control-box button{
+margin-top:0;
 
-      background:#007bff;
-      color:white;
-      border:none;
-      border-radius:6px;
-      cursor:pointer;
+}
 
-    }
+.control-box select,
+.control-box button{
 
-    .control-box button:hover{
+width:100%;
+padding:8px;
+margin-top:8px;
 
-      background:#0056b3;
+}
 
-    }
+.control-box button{
 
-    /* =========================
-        POPUP
-    ========================== */
+background:#007bff;
+color:white;
 
-    .popup-table{
+border:none;
 
-      border-collapse:collapse;
-      width:100%;
+border-radius:6px;
 
-    }
+cursor:pointer;
 
-    .popup-table td{
+}
 
-      border-bottom:1px solid #ddd;
-      padding:4px;
-      font-size:12px;
+.control-box button:hover{
 
-    }
+background:#0056b3;
 
-    .popup-title{
+}
 
-      font-weight:bold;
-      margin-bottom:6px;
+/* =========================
+    LEGEND
+========================== */
 
-    }
+.legend{
 
-    /* =========================
-        LEGEND
-    ========================== */
+background:white;
 
-    .legend{
+padding:10px;
 
-      background:white;
+border-radius:10px;
 
-      padding:10px;
+box-shadow:0 0 10px rgba(0,0,0,0.3);
 
-      border-radius:10px;
+line-height:22px;
 
-      box-shadow:0 0 10px rgba(0,0,0,0.3);
+font-size:13px;
 
-      font-size:13px;
+}
 
-      line-height:22px;
+.legend-box{
 
-    }
+width:16px;
+height:16px;
 
-    .legend-box{
+display:inline-block;
 
-      width:16px;
-      height:16px;
+margin-right:6px;
 
-      display:inline-block;
+}
 
-      margin-right:6px;
+/* =========================
+    POPUP
+========================== */
 
-    }
+.popup-table{
 
-    /* =========================
-        LAYER CONTROL
-    ========================== */
+border-collapse:collapse;
 
-    .leaflet-top.leaflet-right{
+width:100%;
 
-      top:10px;
-      right:10px;
+}
 
-    }
+.popup-table td{
 
-    /* =========================
-        LEGEND POSITION
-    ========================== */
+border-bottom:1px solid #ddd;
 
-    .leaflet-bottom.leaflet-left{
+padding:4px;
 
-      bottom:10px;
-      left:10px;
+font-size:12px;
 
-    }
+}
 
-  </style>
+.popup-title{
+
+font-weight:bold;
+
+margin-bottom:6px;
+
+}
+
+/* =========================
+    COUNTER BOX
+========================== */
+
+.info-box{
+
+position:absolute;
+
+top:20px;
+left:60px;
+
+z-index:1000;
+
+background:white;
+
+padding:10px;
+
+border-radius:10px;
+
+box-shadow:0 0 10px rgba(0,0,0,0.3);
+
+font-size:13px;
+
+line-height:24px;
+
+}
+
+</style>
 
 </head>
 
@@ -180,31 +211,40 @@
 
 <div class="control-box">
 
-  <h3>
-    البحث عن أقرب مستشفى
-  </h3>
+<h3>
+البحث عن أقرب مستشفى
+</h3>
 
-  <select id="hospitalType">
+<select id="hospitalType">
 
-    <option value="all">
-      جميع المستشفيات
-    </option>
+<option value="all">
+جميع المستشفيات
+</option>
 
-    <option value="government">
-      حكومي
-    </option>
+<option value="government">
+حكومي
+</option>
 
-    <option value="private">
-      خاص
-    </option>
+<option value="private">
+خاص
+</option>
 
-  </select>
+</select>
 
-  <button onclick="findNearestHospital()">
+<button onclick="findNearestHospital()">
 
-    ايجاد أقرب مستشفى
+ايجاد أقرب مستشفى
 
-  </button>
+</button>
+
+</div>
+
+<!-- INFO COUNTER -->
+
+<div class="info-box"
+id="infoBox">
+
+جاري التحميل...
 
 </div>
 
@@ -220,636 +260,769 @@
 
 <script src="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.js"></script>
 
+<!-- GEOCODER -->
+
+<script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
+
+<!-- HEATMAP -->
+
+<script src="https://unpkg.com/leaflet.heat/dist/leaflet-heat.js"></script>
+
+<!-- DRAW -->
+
+<script src="https://unpkg.com/leaflet-draw/dist/leaflet.draw.js"></script>
+
+<!-- FULLSCREEN -->
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.fullscreen/2.4.0/Control.FullScreen.min.js"></script>
+
+<!-- MINIMAP -->
+
+<script src="https://unpkg.com/leaflet-minimap/dist/Control.MiniMap.min.js"></script>
+
 <script>
 
-  /* =========================
-      MAP
-  ========================== */
+const map = L.map("map",{
 
-  const map = L.map("map")
-  .setView([31.9038,35.2034],13);
+fullscreenControl:true
 
-  /* =========================
-      BASEMAPS
-  ========================== */
+}).setView([31.9038,35.2034],13);
 
-  var lightMap = L.tileLayer(
+/* =========================
+    BASEMAPS
+========================== */
 
-    "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+var lightMap = L.tileLayer(
 
-    {
+"https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
 
-      attribution:"&copy; OpenStreetMap"
+{
 
-    }
+attribution:"OpenStreetMap"
 
-  ).addTo(map);
+}
 
-  var darkMap = L.tileLayer(
+).addTo(map);
 
-    "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",
+var darkMap = L.tileLayer(
 
-    {
+"https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",
 
-      attribution:"&copy; CARTO"
+{
 
-    }
+attribution:"CARTO"
 
-  );
+}
 
-  /* =========================
-      VARIABLES
-  ========================== */
+);
 
-  let userLocation = null;
+/* =========================
+    MINI MAP
+========================== */
 
-  let hospitals = [];
+new L.Control.MiniMap(lightMap,{
 
-  let routingControl = null;
+toggleDisplay:true
 
-  /* =========================
-      USER LOCATION
-  ========================== */
+}).addTo(map);
 
-  navigator.geolocation.getCurrentPosition(pos => {
+/* =========================
+    SCALE
+========================== */
 
-    userLocation = [
+L.control.scale().addTo(map);
 
-      pos.coords.latitude,
-      pos.coords.longitude
+/* =========================
+    SEARCH
+========================== */
 
-    ];
+L.Control.geocoder().addTo(map);
 
-    L.marker(userLocation)
+/* =========================
+    DRAW TOOLS
+========================== */
 
-      .addTo(map)
+var drawnItems = new L.FeatureGroup();
 
-      .bindPopup("موقعك الحالي")
+map.addLayer(drawnItems);
 
-      .openPopup();
+var drawControl = new L.Control.Draw({
 
-    map.setView(userLocation,14);
+edit:{
 
-  });
+featureGroup:drawnItems
 
-  /* =========================
-      POPUP FUNCTION
-  ========================== */
+}
 
-  function popupAttributes(feature, layer){
+});
 
-    if(!feature.properties) return;
+map.addControl(drawControl);
 
-    let html = `
+map.on(L.Draw.Event.CREATED,function(e){
 
-      <div class="popup-title">
+drawnItems.addLayer(e.layer);
 
-        Attributes
+});
 
-      </div>
+/* =========================
+    VARIABLES
+========================== */
 
-      <table class="popup-table">
+let userLocation = null;
 
-    `;
+let hospitals = [];
 
-    for(let key in feature.properties){
+let routingControl = null;
 
-      html += `
+/* =========================
+    USER LOCATION
+========================== */
 
-        <tr>
+navigator.geolocation.getCurrentPosition(pos=>{
 
-          <td>
-            <b>${key}</b>
-          </td>
+userLocation = [
 
-          <td>
-            ${feature.properties[key]}
-          </td>
+pos.coords.latitude,
+pos.coords.longitude
 
-        </tr>
+];
 
-      `;
-    }
+L.marker(userLocation)
 
-    html += `</table>`;
+.addTo(map)
 
-    layer.bindPopup(html);
+.bindPopup("موقعك الحالي")
 
-  }
+.openPopup();
 
-  /* =========================
-      LOAD DATA
-  ========================== */
+map.setView(userLocation,14);
 
-  Promise.all([
+});
 
-    fetch("Ramallah_Boundary.json")
-    .then(r => r.json()),
+/* =========================
+    POPUP
+========================== */
 
-    fetch("Road_Network.json")
-    .then(r => r.json()),
+function popupAttributes(feature,layer){
 
-    fetch("Living.json")
-    .then(r => r.json()),
+if(!feature.properties) return;
 
-    fetch("Parking.json")
-    .then(r => r.json()),
+let html = `
 
-    fetch("Health_Services.json")
-    .then(r => r.json())
+<div class="popup-title">
 
-  ]).then(initLayers);
+Attributes
 
-  /* =========================
-      INIT LAYERS
-  ========================== */
+</div>
 
-  function initLayers(data){
+<table class="popup-table">
 
-    let [
+`;
 
-      boundary,
-      roads,
-      living,
-      parking,
-      health
+for(let key in feature.properties){
 
-    ] = data;
+html += `
 
-    hospitals = health.features;
+<tr>
 
-    /* =========================
-        BOUNDARY
-    ========================== */
+<td>
+<b>${key}</b>
+</td>
 
-    var boundaryLayer = L.geoJSON(boundary,{
+<td>
+${feature.properties[key]}
+</td>
 
-      style:{
+</tr>
 
-        color:"#ffffff",
-        weight:3,
-        fillOpacity:0
+`;
 
-      },
+}
 
-      onEachFeature:popupAttributes
+html += `</table>`;
 
-    }).addTo(map);
+layer.bindPopup(html);
 
-    /* =========================
-        ROADS
-    ========================== */
+}
 
-    var roadsLayer = L.geoJSON(roads,{
+/* =========================
+    LOAD DATA
+========================== */
 
-      style:function(feature){
+Promise.all([
 
-        let roadType =
-        feature.properties.type;
+fetch("Ramallah_Boundary.json")
+.then(r=>r.json()),
 
-        if(
+fetch("Road_Network.json")
+.then(r=>r.json()),
 
-          roadType === "Regional" ||
+fetch("Living.json")
+.then(r=>r.json()),
 
-          roadType === "اقليمي"
+fetch("Parking.json")
+.then(r=>r.json()),
 
-        ){
+fetch("Health_Services.json")
+.then(r=>r.json())
 
-          return{
+]).then(initLayers);
 
-            color:"#ff3300",
-            weight:5
+/* =========================
+    INIT LAYERS
+========================== */
 
-          };
+function initLayers(data){
 
-        }
+let [
 
-        else{
+boundary,
+roads,
+living,
+parking,
+health
 
-          return{
+] = data;
 
-            color:"#ffaa00",
-            weight:2
+hospitals = health.features;
 
-          };
+/* =========================
+    BOUNDARY
+========================== */
 
-        }
+var boundaryLayer = L.geoJSON(boundary,{
 
-      },
+style:{
 
-      onEachFeature:popupAttributes
+color:"#ffffff",
+weight:3,
+fillOpacity:0
 
-    }).addTo(map);
+},
 
-    /* =========================
-        LIVING
-    ========================== */
+onEachFeature:popupAttributes
 
-    var livingLayer = L.geoJSON(living,{
+}).addTo(map);
 
-      style:{
+/* =========================
+    ROADS
+========================== */
 
-        color:"#00bfff",
-        weight:2,
-        fillOpacity:0
+var roadsLayer = L.geoJSON(roads,{
 
-      },
+style:function(feature){
 
-      onEachFeature:popupAttributes
+let roadType =
+feature.properties.type;
 
-    }).addTo(map);
+if(
 
-    /* =========================
-        PARKING
-    ========================== */
+roadType === "Regional" ||
+roadType === "اقليمي"
 
-    var parkingLayer = L.geoJSON(parking,{
+){
 
-      style:{
+return{
 
-        color:"#1b5e20",
-        weight:1.5,
-        fillColor:"#2e7d32",
-        fillOpacity:0.8
+color:"#ff3300",
+weight:5
 
-      },
+};
 
-      onEachFeature:popupAttributes
+}
 
-    }).addTo(map);
+else{
 
-    /* =========================
-        HEALTH
-    ========================== */
+return{
 
-    var healthLayer = L.geoJSON(health,{
+color:"#ffaa00",
+weight:2
 
-      pointToLayer:function(feature,latlng){
+};
 
-        return L.circleMarker(latlng,{
+}
 
-          radius:6,
+},
 
-          fillColor:"#ff0000",
+onEachFeature:function(feature,layer){
 
-          color:"#ffffff",
+popupAttributes(feature,layer);
 
-          weight:1,
+layer.on("mouseover",function(){
 
-          fillOpacity:0.9
+layer.bindTooltip(
 
-        });
+feature.properties.type || "Road"
 
-      },
+).openTooltip();
 
-      onEachFeature:popupAttributes
+});
 
-    }).addTo(map);
+}
 
-    /* =========================
-        FIT BOUNDS
-    ========================== */
+}).addTo(map);
 
-    map.fitBounds(boundaryLayer.getBounds());
+/* =========================
+    LIVING
+========================== */
 
-    /* =========================
-        LAYERS CONTROL
-    ========================== */
+var livingLayer = L.geoJSON(living,{
 
-    var baseMaps = {
+style:{
 
-      "Light Mode":lightMap,
+color:"#00bfff",
+weight:2,
+fillOpacity:0
 
-      "Dark Mode":darkMap
+},
 
-    };
+onEachFeature:popupAttributes
 
-    var overlayMaps = {
+}).addTo(map);
 
-      "Ramallah Boundary":boundaryLayer,
+/* =========================
+    PARKING
+========================== */
 
-      "Road Network":roadsLayer,
+var parkingLayer = L.geoJSON(parking,{
 
-      "Living Areas":livingLayer,
+style:{
 
-      "Parking":parkingLayer,
+color:"#1b5e20",
+weight:1.5,
+fillColor:"#2e7d32",
+fillOpacity:0.8
 
-      "Health Services":healthLayer
+},
 
-    };
+onEachFeature:popupAttributes
 
-    L.control.layers(
+}).addTo(map);
 
-      baseMaps,
-      overlayMaps,
+/* =========================
+    HEALTH SERVICES
+========================== */
 
-      {
+var healthLayer = L.geoJSON(health,{
 
-        collapsed:false
+pointToLayer:function(feature,latlng){
 
-      }
+return L.circleMarker(latlng,{
 
-    ).addTo(map);
+radius:7,
 
-    /* =========================
-        LEGEND
-    ========================== */
+fillColor:"#ff0000",
 
-    var legend = L.control({
+color:"#ffffff",
 
-      position:"bottomleft"
+weight:1,
 
-    });
+fillOpacity:0.9
 
-    legend.onAdd = function(){
+});
 
-      var div =
-      L.DomUtil.create("div","legend");
+},
 
-      div.innerHTML = `
+onEachFeature:function(feature,layer){
 
-        <b>Legend</b>
+popupAttributes(feature,layer);
 
-        <br><br>
+layer.on("mouseover",function(){
 
-        <div>
+layer.bindTooltip(
 
-          <span class="legend-box"
+feature.properties.BUSNIESS_NAME_A
 
-          style="border:2px solid #00bfff;background:black;">
+).openTooltip();
 
-          </span>
+});
 
-          Living Areas
+}
 
-        </div>
+}).addTo(map);
 
-        <div>
+/* =========================
+    HEATMAP
+========================== */
 
-          <span class="legend-box"
+let heatPoints = [];
 
-          style="background:#ff3300;">
+health.features.forEach(f=>{
 
-          </span>
+heatPoints.push([
 
-          Regional Roads
+f.geometry.coordinates[1],
 
-        </div>
+f.geometry.coordinates[0],
 
-        <div>
+1
 
-          <span class="legend-box"
+]);
 
-          style="background:#ffaa00;">
+});
 
-          </span>
+var heatLayer = L.heatLayer(heatPoints,{
 
-          Internal Roads
+radius:25
 
-        </div>
+});
 
-        <div>
+/* =========================
+    FIT BOUNDS
+========================== */
 
-          <span class="legend-box"
+map.fitBounds(boundaryLayer.getBounds());
 
-          style="background:#2e7d32;border:1px solid #1b5e20;">
+/* =========================
+    COUNTER BOX
+========================== */
 
-          </span>
+document.getElementById("infoBox").innerHTML = `
 
-          Parking
+<b>احصائيات الخريطة</b>
 
-        </div>
+<br>
 
-        <div>
+عدد المستشفيات:
+${health.features.length}
 
-          <span class="legend-box"
+<br>
 
-          style="background:#ff0000;border-radius:50%;">
+عدد الشوارع:
+${roads.features.length}
 
-          </span>
+<br>
 
-          Health Services
+عدد مواقف السيارات:
+${parking.features.length}
 
-        </div>
+`;
 
-        <div>
+/* =========================
+    LAYER CONTROL
+========================== */
 
-          <span class="legend-box"
+var baseMaps = {
 
-          style="background:#ffffff;">
+"Light Mode":lightMap,
 
-          </span>
+"Dark Mode":darkMap
 
-          Ramallah Boundary
+};
 
-        </div>
+var overlayMaps = {
 
-      `;
+"Boundary":boundaryLayer,
 
-      return div;
+"Roads":roadsLayer,
 
-    };
+"Living":livingLayer,
 
-    legend.addTo(map);
+"Parking":parkingLayer,
 
-  }
+"Hospitals":healthLayer,
 
-  /* =========================
-      HOSPITAL TYPES
-  ========================== */
+"Heatmap":heatLayer,
 
-  function getHospitalType(name){
+"Drawings":drawnItems
 
-    const government = [
+};
 
-      "مجمع فلسطين الطبي"
+L.control.layers(
 
-    ];
+baseMaps,
+overlayMaps,
 
-    const privateHospitals = [
+{
 
-      "المستشفى الاستشاري العربي",
+collapsed:false
 
-      "مستشفى الرعاية التخصصي",
+}
 
-      "مستشفى دكتور ضرغام",
+).addTo(map);
 
-      "مستشفى الناظر للولادة"
+/* =========================
+    LEGEND
+========================== */
 
-    ];
+var legend = L.control({
 
-    if(government.includes(name))
-      return "government";
+position:"bottomleft"
 
-    if(privateHospitals.includes(name))
-      return "private";
+});
 
-    return "private";
+legend.onAdd = function(){
 
-  }
+var div =
+L.DomUtil.create("div","legend");
 
-  /* =========================
-      DISTANCE FUNCTION
-  ========================== */
+div.innerHTML = `
 
-  function distance(
+<b>Legend</b>
 
-    lat1,
-    lon1,
-    lat2,
-    lon2
+<br><br>
 
-  ){
+<div>
 
-    const R = 6371;
+<span class="legend-box"
 
-    const dLat =
-    (lat2-lat1) * Math.PI/180;
+style="background:#ff3300;">
 
-    const dLon =
-    (lon2-lon1) * Math.PI/180;
+</span>
 
-    const a =
+Regional Roads
 
-      Math.sin(dLat/2) *
-      Math.sin(dLat/2)
+</div>
 
-      +
+<div>
 
-      Math.cos(lat1*Math.PI/180)
+<span class="legend-box"
 
-      *
+style="background:#ffaa00;">
 
-      Math.cos(lat2*Math.PI/180)
+</span>
 
-      *
+Internal Roads
 
-      Math.sin(dLon/2)
+</div>
 
-      *
+<div>
 
-      Math.sin(dLon/2);
+<span class="legend-box"
 
-    const c =
+style="background:#00bfff;">
 
-      2 *
+</span>
 
-      Math.atan2(
+Living Areas
 
-        Math.sqrt(a),
+</div>
 
-        Math.sqrt(1-a)
+<div>
 
-      );
+<span class="legend-box"
 
-    return R*c;
+style="background:#2e7d32;">
 
-  }
+</span>
 
-  /* =========================
-      FIND NEAREST HOSPITAL
-  ========================== */
+Parking
 
-  function findNearestHospital(){
+</div>
 
-    if(!userLocation){
+<div>
 
-      alert("لم يتم تحديد موقعك");
+<span class="legend-box"
 
-      return;
+style="background:#ff0000;
+border-radius:50%;">
 
-    }
+</span>
 
-    const selected =
+Hospitals
 
-    document.getElementById(
-      "hospitalType"
-    ).value;
+</div>
 
-    let nearest = null;
+`;
 
-    let minDistance = Infinity;
+return div;
 
-    hospitals.forEach(h => {
+};
 
-      const name =
-      h.properties.BUSNIESS_NAME_A;
+legend.addTo(map);
 
-      const type =
-      getHospitalType(name);
+}
 
-      if(
+/* =========================
+    DISTANCE
+========================== */
 
-        selected !== "all" &&
-        type !== selected
+function distance(lat1,lon1,lat2,lon2){
 
-      ) return;
+const R = 6371;
 
-      const lat =
-      h.geometry.coordinates[1];
+const dLat =
+(lat2-lat1)*Math.PI/180;
 
-      const lon =
-      h.geometry.coordinates[0];
+const dLon =
+(lon2-lon1)*Math.PI/180;
 
-      const d = distance(
+const a =
 
-        userLocation[0],
-        userLocation[1],
+Math.sin(dLat/2) *
+Math.sin(dLat/2)
 
-        lat,
-        lon
++
 
-      );
+Math.cos(lat1*Math.PI/180)
 
-      if(d < minDistance){
+*
 
-        minDistance = d;
+Math.cos(lat2*Math.PI/180)
 
-        nearest = h;
+*
 
-      }
+Math.sin(dLon/2)
 
-    });
+*
 
-    if(!nearest){
+Math.sin(dLon/2);
 
-      alert("لا يوجد مستشفى");
+const c =
 
-      return;
+2 *
 
-    }
+Math.atan2(
 
-    const target = [
+Math.sqrt(a),
 
-      nearest.geometry.coordinates[1],
+Math.sqrt(1-a)
 
-      nearest.geometry.coordinates[0]
+);
 
-    ];
+return R*c;
 
-    if(routingControl){
+}
 
-      map.removeControl(routingControl);
+/* =========================
+    HOSPITAL TYPE
+========================== */
 
-    }
+function getHospitalType(name){
 
-    routingControl =
+const government = [
 
-    L.Routing.control({
+"مجمع فلسطين الطبي"
 
-      waypoints:[
+];
 
-        L.latLng(userLocation),
+if(government.includes(name))
+return "government";
 
-        L.latLng(target)
+return "private";
 
-      ],
+}
 
-      routeWhileDragging:false
+/* =========================
+    FIND NEAREST HOSPITAL
+========================== */
 
-    }).addTo(map);
+function findNearestHospital(){
 
-  }
+if(!userLocation){
+
+alert("لم يتم تحديد موقعك");
+
+return;
+
+}
+
+const selected =
+
+document.getElementById(
+"hospitalType"
+).value;
+
+let nearest = null;
+
+let minDistance = Infinity;
+
+hospitals.forEach(h=>{
+
+const name =
+h.properties.BUSNIESS_NAME_A;
+
+const type =
+getHospitalType(name);
+
+if(
+
+selected !== "all" &&
+type !== selected
+
+) return;
+
+const lat =
+h.geometry.coordinates[1];
+
+const lon =
+h.geometry.coordinates[0];
+
+const d = distance(
+
+userLocation[0],
+userLocation[1],
+
+lat,
+lon
+
+);
+
+if(d < minDistance){
+
+minDistance = d;
+
+nearest = h;
+
+}
+
+});
+
+if(!nearest){
+
+alert("لا يوجد مستشفى");
+
+return;
+
+}
+
+const target = [
+
+nearest.geometry.coordinates[1],
+
+nearest.geometry.coordinates[0]
+
+];
+
+if(routingControl){
+
+map.removeControl(routingControl);
+
+}
+
+routingControl =
+
+L.Routing.control({
+
+waypoints:[
+
+L.latLng(userLocation),
+
+L.latLng(target)
+
+],
+
+routeWhileDragging:false
+
+}).addTo(map);
+
+}
+
+/* =========================
+    SHOW COORDINATES
+========================== */
+
+map.on("click",function(e){
+
+console.log(
+
+"Latitude: " + e.latlng.lat +
+
+" Longitude: " + e.latlng.lng
+
+);
+
+});
 
 </script>
 
