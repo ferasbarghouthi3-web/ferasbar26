@@ -1,186 +1,380 @@
-const map = L.map('map').setView([31.9038,35.2034],13);
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Nearest Hospital Finder</title>
 
-L.tileLayer(
-'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
-{
-attribution:'OpenStreetMap'
-}
-).addTo(map);
+  <!-- LEAFLET -->
+  <link rel="stylesheet"
+    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 
-let userLocation = null;
-let hospitals = [];
-let routingControl = null;
+  <!-- LEAFLET ROUTING -->
+  <link rel="stylesheet"
+    href="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.css"/>
 
-navigator.geolocation.getCurrentPosition(pos=>{
+  <style>
 
-userLocation = [
-pos.coords.latitude,
-pos.coords.longitude
-];
+    html,body{
+      margin:0;
+      height:100%;
+      font-family:Arial;
+    }
 
-L.marker(userLocation)
-.addTo(map)
-.bindPopup("موقعك الحالي");
+    #map{
+      width:100%;
+      height:100%;
+    }
 
-map.setView(userLocation,14);
+    .control-box{
 
-});
+      position:absolute;
+      top:10px;
+      right:10px;
+      z-index:1000;
 
-fetch("Health_Services.json")
-.then(res=>res.json())
-.then(data=>{
+      background:white;
+      padding:12px;
+      border-radius:10px;
 
-hospitals = data.features;
+      box-shadow:0 0 10px rgba(0,0,0,0.3);
 
-hospitals.forEach(h=>{
+    }
 
-const coords = [
-h.geometry.coordinates[1],
-h.geometry.coordinates[0]
-];
+    select,button{
 
-const name =
-h.properties.BUSNIESS_NAME_A;
+      width:220px;
+      padding:8px;
+      margin-top:8px;
 
-L.marker(coords)
-.addTo(map)
-.bindPopup(name);
+    }
 
-});
+    button{
 
-});
+      cursor:pointer;
+      background:#007bff;
+      color:white;
+      border:none;
+      border-radius:5px;
 
-function getHospitalType(name){
+    }
 
-const government = [
-"مجمع فلسطين الطبي"
-];
+    button:hover{
 
-const privateHospitals = [
-"المستشفى الاستشاري العربي",
-" مستشفى الرعاية التخصصي",
-"مستشفى دكتور ضرغام",
-"مستشفى الناظر للولادة"
-];
+      background:#0056b3;
 
-if(government.includes(name))
-return "government";
+    }
 
-if(privateHospitals.includes(name))
-return "private";
+  </style>
+</head>
 
-return "private";
+<body>
 
-}
+<div class="control-box">
 
-function distance(lat1,lon1,lat2,lon2){
+  <h3>البحث عن أقرب مستشفى</h3>
 
-const R = 6371;
+  <select id="hospitalType">
 
-const dLat =
-(lat2-lat1) * Math.PI/180;
+    <option value="all">
+      جميع المستشفيات
+    </option>
 
-const dLon =
-(lon2-lon1) * Math.PI/180;
+    <option value="government">
+      حكومي
+    </option>
 
-const a =
-Math.sin(dLat/2) *
-Math.sin(dLat/2)
-+
-Math.cos(lat1*Math.PI/180)
-*
-Math.cos(lat2*Math.PI/180)
-*
-Math.sin(dLon/2)
-*
-Math.sin(dLon/2);
+    <option value="private">
+      خاص
+    </option>
 
-const c =
-2 *
-Math.atan2(
-Math.sqrt(a),
-Math.sqrt(1-a)
-);
+  </select>
 
-return R*c;
+  <button onclick="findNearestHospital()">
+    ايجاد أقرب مستشفى
+  </button>
 
-}
+</div>
 
-function findNearestHospital(){
+<div id="map"></div>
 
-const selected =
-document.getElementById("hospitalType").value;
+<!-- LEAFLET -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
-let nearest = null;
-let minDistance = Infinity;
+<!-- ROUTING -->
+<script src="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.js"></script>
 
-hospitals.forEach(h=>{
+<script>
 
-const name =
-h.properties.BUSNIESS_NAME_A;
+  /* =========================
+      MAP
+  ========================== */
 
-const type =
-getHospitalType(name);
+  const map = L.map('map').setView(
+    [31.9038,35.2034],
+    13
+  );
 
-if(
-selected !== "all" &&
-type !== selected
-)
-return;
+  L.tileLayer(
+    'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+    {
+      attribution:'OpenStreetMap'
+    }
+  ).addTo(map);
 
-const lat =
-h.geometry.coordinates[1];
+  /* =========================
+      VARIABLES
+  ========================== */
 
-const lon =
-h.geometry.coordinates[0];
+  let userLocation = null;
 
-const d =
-distance(
-userLocation[0],
-userLocation[1],
-lat,
-lon
-);
+  let hospitals = [];
 
-if(d < minDistance){
+  let routingControl = null;
 
-minDistance = d;
-nearest = h;
+  /* =========================
+      USER LOCATION
+  ========================== */
 
-}
+  navigator.geolocation.getCurrentPosition(pos => {
 
-});
+    userLocation = [
 
-if(!nearest){
+      pos.coords.latitude,
+      pos.coords.longitude
 
-alert("لا يوجد مستشفى");
-return;
+    ];
 
-}
+    L.marker(userLocation)
 
-const target = [
+      .addTo(map)
 
-nearest.geometry.coordinates[1],
-nearest.geometry.coordinates[0]
+      .bindPopup("موقعك الحالي")
 
-];
+      .openPopup();
 
-if(routingControl){
+    map.setView(userLocation,14);
 
-map.removeControl(routingControl);
+  });
 
-}
+  /* =========================
+      LOAD HOSPITALS
+  ========================== */
 
-routingControl =
-L.Routing.control({
+  fetch("Health_Services.json")
 
-waypoints:[
-L.latLng(userLocation),
-L.latLng(target)
-],
+    .then(res => res.json())
 
-routeWhileDragging:false
+    .then(data => {
 
-}).addTo(map);
+      hospitals = data.features;
 
-}
+      hospitals.forEach(h => {
+
+        const coords = [
+
+          h.geometry.coordinates[1],
+          h.geometry.coordinates[0]
+
+        ];
+
+        const name =
+          h.properties.BUSNIESS_NAME_A;
+
+        L.marker(coords)
+
+          .addTo(map)
+
+          .bindPopup(name);
+
+      });
+
+    });
+
+  /* =========================
+      HOSPITAL TYPE
+  ========================== */
+
+  function getHospitalType(name){
+
+    const government = [
+
+      "مجمع فلسطين الطبي"
+
+    ];
+
+    const privateHospitals = [
+
+      "المستشفى الاستشاري العربي",
+      "مستشفى الرعاية التخصصي",
+      "مستشفى دكتور ضرغام",
+      "مستشفى الناظر للولادة"
+
+    ];
+
+    if(government.includes(name))
+      return "government";
+
+    if(privateHospitals.includes(name))
+      return "private";
+
+    return "private";
+
+  }
+
+  /* =========================
+      DISTANCE FUNCTION
+  ========================== */
+
+  function distance(
+    lat1,
+    lon1,
+    lat2,
+    lon2
+  ){
+
+    const R = 6371;
+
+    const dLat =
+      (lat2-lat1) * Math.PI/180;
+
+    const dLon =
+      (lon2-lon1) * Math.PI/180;
+
+    const a =
+
+      Math.sin(dLat/2) *
+      Math.sin(dLat/2)
+
+      +
+
+      Math.cos(lat1*Math.PI/180)
+
+      *
+
+      Math.cos(lat2*Math.PI/180)
+
+      *
+
+      Math.sin(dLon/2)
+
+      *
+
+      Math.sin(dLon/2);
+
+    const c =
+
+      2 *
+
+      Math.atan2(
+        Math.sqrt(a),
+        Math.sqrt(1-a)
+      );
+
+    return R * c;
+
+  }
+
+  /* =========================
+      FIND NEAREST
+  ========================== */
+
+  function findNearestHospital(){
+
+    if(!userLocation){
+
+      alert("لم يتم تحديد موقعك بعد");
+
+      return;
+
+    }
+
+    const selected =
+      document.getElementById(
+        "hospitalType"
+      ).value;
+
+    let nearest = null;
+
+    let minDistance = Infinity;
+
+    hospitals.forEach(h => {
+
+      const name =
+        h.properties.BUSNIESS_NAME_A;
+
+      const type =
+        getHospitalType(name);
+
+      if(
+        selected !== "all" &&
+        type !== selected
+      ) return;
+
+      const lat =
+        h.geometry.coordinates[1];
+
+      const lon =
+        h.geometry.coordinates[0];
+
+      const d = distance(
+
+        userLocation[0],
+        userLocation[1],
+        lat,
+        lon
+
+      );
+
+      if(d < minDistance){
+
+        minDistance = d;
+
+        nearest = h;
+
+      }
+
+    });
+
+    if(!nearest){
+
+      alert("لا يوجد مستشفى");
+
+      return;
+
+    }
+
+    const target = [
+
+      nearest.geometry.coordinates[1],
+      nearest.geometry.coordinates[0]
+
+    ];
+
+    if(routingControl){
+
+      map.removeControl(routingControl);
+
+    }
+
+    routingControl =
+      L.Routing.control({
+
+        waypoints:[
+
+          L.latLng(userLocation),
+
+          L.latLng(target)
+
+        ],
+
+        routeWhileDragging:false
+
+      }).addTo(map);
+
+  }
+
+</script>
+
+</body>
+</html>
