@@ -3,9 +3,11 @@
 <head>
 
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 
-  <title>Ramallah Smart GIS</title>
+  <title>Ramallah Web GIS</title>
+
+  <meta name="viewport"
+  content="width=device-width, initial-scale=1.0"/>
 
   <!-- LEAFLET -->
   <link rel="stylesheet"
@@ -18,25 +20,30 @@
   <style>
 
     html,body{
+
       margin:0;
       height:100%;
-      font-family:Arial;
+      font-family:Arial,sans-serif;
+
     }
 
     #map{
+
       width:100%;
       height:100%;
+
     }
 
     /* =========================
-        CONTROL PANEL
+        SEARCH BOX
     ========================== */
 
     .control-box{
 
       position:absolute;
-      top:10px;
-      right:10px;
+
+      bottom:20px;
+      right:20px;
 
       z-index:1000;
 
@@ -48,75 +55,39 @@
 
       box-shadow:0 0 10px rgba(0,0,0,0.3);
 
-      width:230px;
+      width:240px;
 
     }
 
     .control-box h3{
 
       margin-top:0;
-      margin-bottom:10px;
-
-      font-size:18px;
+      font-size:16px;
 
     }
 
-    select,button{
+    .control-box select,
+    .control-box button{
 
       width:100%;
       padding:8px;
       margin-top:8px;
 
-      border-radius:5px;
-      border:1px solid #ccc;
-
     }
 
-    button{
+    .control-box button{
 
-      background:#1976d2;
+      background:#007bff;
       color:white;
-      cursor:pointer;
       border:none;
-
-      font-weight:bold;
-
-    }
-
-    button:hover{
-
-      background:#0d47a1;
+      border-radius:6px;
+      cursor:pointer;
 
     }
 
-    /* =========================
-        LEGEND
-    ========================== */
+    .control-box button:hover{
 
-    .legend{
-
-      background:white;
-
-      padding:10px;
-
-      border-radius:10px;
-
-      box-shadow:0 0 10px rgba(0,0,0,0.3);
-
-      line-height:22px;
-
-      font-size:13px;
-
-    }
-
-    .legend-box{
-
-      width:16px;
-      height:16px;
-
-      display:inline-block;
-
-      margin-right:6px;
+      background:#0056b3;
 
     }
 
@@ -146,15 +117,72 @@
 
     }
 
+    /* =========================
+        LEGEND
+    ========================== */
+
+    .legend{
+
+      background:white;
+
+      padding:10px;
+
+      border-radius:10px;
+
+      box-shadow:0 0 10px rgba(0,0,0,0.3);
+
+      font-size:13px;
+
+      line-height:22px;
+
+    }
+
+    .legend-box{
+
+      width:16px;
+      height:16px;
+
+      display:inline-block;
+
+      margin-right:6px;
+
+    }
+
+    /* =========================
+        LAYER CONTROL
+    ========================== */
+
+    .leaflet-top.leaflet-right{
+
+      top:10px;
+      right:10px;
+
+    }
+
+    /* =========================
+        LEGEND POSITION
+    ========================== */
+
+    .leaflet-bottom.leaflet-left{
+
+      bottom:10px;
+      left:10px;
+
+    }
+
   </style>
 
 </head>
 
 <body>
 
+<!-- SEARCH BOX -->
+
 <div class="control-box">
 
-  <h3>أقرب مستشفى</h3>
+  <h3>
+    البحث عن أقرب مستشفى
+  </h3>
 
   <select id="hospitalType">
 
@@ -173,17 +201,23 @@
   </select>
 
   <button onclick="findNearestHospital()">
-    تحديد أقرب مستشفى
+
+    ايجاد أقرب مستشفى
+
   </button>
 
 </div>
 
+<!-- MAP -->
+
 <div id="map"></div>
 
 <!-- LEAFLET -->
+
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
 <!-- ROUTING -->
+
 <script src="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.js"></script>
 
 <script>
@@ -192,27 +226,35 @@
       MAP
   ========================== */
 
-  const map = L.map('map').setView(
-    [31.9038,35.2034],
-    13
-  );
+  const map = L.map("map")
+  .setView([31.9038,35.2034],13);
 
   /* =========================
       BASEMAPS
   ========================== */
 
-  const lightMap = L.tileLayer(
-    'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+  var lightMap = L.tileLayer(
+
+    "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+
     {
-      attribution:'OpenStreetMap'
+
+      attribution:"&copy; OpenStreetMap"
+
     }
+
   ).addTo(map);
 
-  const darkMap = L.tileLayer(
-    'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
+  var darkMap = L.tileLayer(
+
+    "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",
+
     {
-      attribution:'CARTO'
+
+      attribution:"&copy; CARTO"
+
     }
+
   );
 
   /* =========================
@@ -224,38 +266,6 @@
   let hospitals = [];
 
   let routingControl = null;
-
-  /* =========================
-      POPUP FUNCTION
-  ========================== */
-
-  function popupAttributes(feature, layer){
-
-    if(!feature.properties) return;
-
-    let html = `
-      <div class="popup-title">
-        Attributes
-      </div>
-
-      <table class="popup-table">
-    `;
-
-    for(let key in feature.properties){
-
-      html += `
-        <tr>
-          <td><b>${key}</b></td>
-          <td>${feature.properties[key]}</td>
-        </tr>
-      `;
-    }
-
-    html += `</table>`;
-
-    layer.bindPopup(html);
-
-  }
 
   /* =========================
       USER LOCATION
@@ -283,16 +293,70 @@
   });
 
   /* =========================
+      POPUP FUNCTION
+  ========================== */
+
+  function popupAttributes(feature, layer){
+
+    if(!feature.properties) return;
+
+    let html = `
+
+      <div class="popup-title">
+
+        Attributes
+
+      </div>
+
+      <table class="popup-table">
+
+    `;
+
+    for(let key in feature.properties){
+
+      html += `
+
+        <tr>
+
+          <td>
+            <b>${key}</b>
+          </td>
+
+          <td>
+            ${feature.properties[key]}
+          </td>
+
+        </tr>
+
+      `;
+    }
+
+    html += `</table>`;
+
+    layer.bindPopup(html);
+
+  }
+
+  /* =========================
       LOAD DATA
   ========================== */
 
   Promise.all([
 
-    fetch("Ramallah_Boundary.json").then(r=>r.json()),
-    fetch("Road_Network.json").then(r=>r.json()),
-    fetch("Living.json").then(r=>r.json()),
-    fetch("Parking.json").then(r=>r.json()),
-    fetch("Health_Services.json").then(r=>r.json())
+    fetch("Ramallah_Boundary.json")
+    .then(r => r.json()),
+
+    fetch("Road_Network.json")
+    .then(r => r.json()),
+
+    fetch("Living.json")
+    .then(r => r.json()),
+
+    fetch("Parking.json")
+    .then(r => r.json()),
+
+    fetch("Health_Services.json")
+    .then(r => r.json())
 
   ]).then(initLayers);
 
@@ -303,18 +367,22 @@
   function initLayers(data){
 
     let [
+
       boundary,
       roads,
       living,
       parking,
       health
+
     ] = data;
+
+    hospitals = health.features;
 
     /* =========================
         BOUNDARY
     ========================== */
 
-    const boundaryLayer = L.geoJSON(boundary,{
+    var boundaryLayer = L.geoJSON(boundary,{
 
       style:{
 
@@ -332,15 +400,19 @@
         ROADS
     ========================== */
 
-    const roadsLayer = L.geoJSON(roads,{
+    var roadsLayer = L.geoJSON(roads,{
 
       style:function(feature){
 
-        let roadType = feature.properties.type;
+        let roadType =
+        feature.properties.type;
 
         if(
+
           roadType === "Regional" ||
+
           roadType === "اقليمي"
+
         ){
 
           return{
@@ -373,7 +445,7 @@
         LIVING
     ========================== */
 
-    const livingLayer = L.geoJSON(living,{
+    var livingLayer = L.geoJSON(living,{
 
       style:{
 
@@ -391,7 +463,7 @@
         PARKING
     ========================== */
 
-    const parkingLayer = L.geoJSON(parking,{
+    var parkingLayer = L.geoJSON(parking,{
 
       style:{
 
@@ -407,19 +479,23 @@
     }).addTo(map);
 
     /* =========================
-        HEALTH SERVICES
+        HEALTH
     ========================== */
 
-    const healthLayer = L.geoJSON(health,{
+    var healthLayer = L.geoJSON(health,{
 
       pointToLayer:function(feature,latlng){
 
         return L.circleMarker(latlng,{
 
           radius:6,
+
           fillColor:"#ff0000",
+
           color:"#ffffff",
+
           weight:1,
+
           fillOpacity:0.9
 
         });
@@ -431,35 +507,34 @@
     }).addTo(map);
 
     /* =========================
-        SAVE HOSPITALS
-    ========================== */
-
-    hospitals = health.features;
-
-    /* =========================
         FIT BOUNDS
     ========================== */
 
     map.fitBounds(boundaryLayer.getBounds());
 
     /* =========================
-        LAYER CONTROL
+        LAYERS CONTROL
     ========================== */
 
-    const baseMaps = {
+    var baseMaps = {
 
-      "Light Mode": lightMap,
-      "Dark Mode": darkMap
+      "Light Mode":lightMap,
+
+      "Dark Mode":darkMap
 
     };
 
-    const overlayMaps = {
+    var overlayMaps = {
 
-      "Ramallah Boundary": boundaryLayer,
-      "Road Network": roadsLayer,
-      "Living Areas": livingLayer,
-      "Parking": parkingLayer,
-      "Health Services": healthLayer
+      "Ramallah Boundary":boundaryLayer,
+
+      "Road Network":roadsLayer,
+
+      "Living Areas":livingLayer,
+
+      "Parking":parkingLayer,
+
+      "Health Services":healthLayer
 
     };
 
@@ -480,61 +555,93 @@
         LEGEND
     ========================== */
 
-    const legend = L.control({
+    var legend = L.control({
 
-      position:"bottomright"
+      position:"bottomleft"
 
     });
 
     legend.onAdd = function(){
 
-      const div =
+      var div =
       L.DomUtil.create("div","legend");
 
       div.innerHTML = `
 
-        <b>Legend</b><br><br>
+        <b>Legend</b>
+
+        <br><br>
 
         <div>
+
           <span class="legend-box"
+
           style="border:2px solid #00bfff;background:black;">
+
           </span>
+
           Living Areas
+
         </div>
 
         <div>
+
           <span class="legend-box"
+
           style="background:#ff3300;">
+
           </span>
+
           Regional Roads
+
         </div>
 
         <div>
+
           <span class="legend-box"
+
           style="background:#ffaa00;">
+
           </span>
+
           Internal Roads
+
         </div>
 
         <div>
+
           <span class="legend-box"
+
           style="background:#2e7d32;border:1px solid #1b5e20;">
+
           </span>
+
           Parking
+
         </div>
 
         <div>
+
           <span class="legend-box"
+
           style="background:#ff0000;border-radius:50%;">
+
           </span>
+
           Health Services
+
         </div>
 
         <div>
+
           <span class="legend-box"
+
           style="background:#ffffff;">
+
           </span>
+
           Ramallah Boundary
+
         </div>
 
       `;
@@ -548,7 +655,7 @@
   }
 
   /* =========================
-      HOSPITAL TYPE
+      HOSPITAL TYPES
   ========================== */
 
   function getHospitalType(name){
@@ -562,8 +669,11 @@
     const privateHospitals = [
 
       "المستشفى الاستشاري العربي",
+
       "مستشفى الرعاية التخصصي",
+
       "مستشفى دكتور ضرغام",
+
       "مستشفى الناظر للولادة"
 
     ];
@@ -583,10 +693,12 @@
   ========================== */
 
   function distance(
+
     lat1,
     lon1,
     lat2,
     lon2
+
   ){
 
     const R = 6371;
@@ -623,11 +735,14 @@
       2 *
 
       Math.atan2(
+
         Math.sqrt(a),
+
         Math.sqrt(1-a)
+
       );
 
-    return R * c;
+    return R*c;
 
   }
 
@@ -639,13 +754,14 @@
 
     if(!userLocation){
 
-      alert("لم يتم تحديد موقعك بعد");
+      alert("لم يتم تحديد موقعك");
 
       return;
 
     }
 
     const selected =
+
     document.getElementById(
       "hospitalType"
     ).value;
@@ -663,8 +779,10 @@
       getHospitalType(name);
 
       if(
+
         selected !== "all" &&
         type !== selected
+
       ) return;
 
       const lat =
@@ -677,6 +795,7 @@
 
         userLocation[0],
         userLocation[1],
+
         lat,
         lon
 
@@ -703,6 +822,7 @@
     const target = [
 
       nearest.geometry.coordinates[1],
+
       nearest.geometry.coordinates[0]
 
     ];
@@ -714,6 +834,7 @@
     }
 
     routingControl =
+
     L.Routing.control({
 
       waypoints:[
