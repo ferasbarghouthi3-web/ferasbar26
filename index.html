@@ -175,6 +175,27 @@ html,body{
 
 }
 
+.nav-active-button{
+
+  background:#007bff !important;
+  color:white;
+  font-weight:bold;
+
+}
+
+.off-route-warning{
+
+  margin-top:8px;
+  padding:8px;
+  background:#fff3cd;
+  border:1px solid #ffecb5;
+  border-radius:8px;
+  color:#7a4f00;
+  font-size:12px;
+  display:none;
+
+}
+
 </style>
 </head>
 
@@ -221,6 +242,14 @@ html,body{
   <button onclick="goToSelectedHospital()">
     الانتقال للمستشفى المحدد
   </button>
+
+  <button id="navigationModeBtn" onclick="toggleNavigationMode()">
+    تشغيل وضع الملاحة
+  </button>
+
+  <div id="offRouteWarning" class="off-route-warning">
+    لقد خرجت عن المسار، جارٍ إعادة التوجيه...
+  </div>
 
   <div id="routeInfo" class="route-info">
     <b>معلومات المسار</b><br>
@@ -277,7 +306,14 @@ let lastLocation = null;
 let activeTarget = null;
 let routeDecorator = null;
 let lastRouteUpdateLocation = null;
+let currentRouteCoordinates = [];
+let isNavigationMode = false;
+let currentBearing = 0;
+let lastOffRouteAlertTime = 0;
+
 const rerouteDistanceMeters = 20;
+const offRouteDistanceMeters = 50;
+const offRouteAlertDelay = 8000;
 
 /* =========================
     USER LOCATION + LIVE TRACKING + DIRECTION
@@ -305,6 +341,165 @@ function calculateBearing(lat1, lon1, lat2, lon2){
 
 }
 
+function toggleNavigationMode(){
+
+  isNavigationMode = !isNavigationMode;
+
+  let btn = document.getElementById("navigationModeBtn");
+
+  if(isNavigationMode){
+
+    btn.innerText = "إيقاف وضع الملاحة";
+    btn.classList.add("nav-active-button");
+
+    if(userLocation){
+      map.setView(userLocation, Math.max(map.getZoom(), 17));
+    }
+
+  }
+
+  else{
+
+    btn.innerText = "تشغيل وضع الملاحة";
+    btn.classList.remove("nav-active-button");
+    resetMapRotation();
+
+  }
+
+}
+
+function applyNavigationMode(angle){
+
+  if(!isNavigationMode || !userLocation){
+    return;
+  }
+
+  map.setView(userLocation, Math.max(map.getZoom(), 17), {
+    animate:true
+  });
+
+  rotateMap(-angle);
+
+}
+
+function rotateMap(angle){
+
+  let pane = map.getPane("mapPane");
+
+  if(pane){
+    pane.style.transform += ` rotate(${angle}deg)`;
+    pane.style.transformOrigin = "50% 50%";
+  }
+
+}
+
+function resetMapRotation(){
+
+  let pane = map.getPane("mapPane");
+
+  if(pane){
+    pane.style.transform = pane.style.transform.replace(/ rotate\([^)]*\)/g, "");
+  }
+
+}
+
+function distanceToRouteMeters(point, routeCoordinates){
+
+  if(!routeCoordinates || routeCoordinates.length < 2){
+    return Infinity;
+  }
+
+  let minDistance = Infinity;
+  let latScale = 111320;
+  let lonScale = 111320 * Math.cos(point[0] * Math.PI / 180);
+
+  let px = point[1] * lonScale;
+  let py = point[0] * latScale;
+
+  for(let i = 0; i < routeCoordinates.length - 1; i++){
+
+    let a = routeCoordinates[i];
+    let b = routeCoordinates[i + 1];
+
+    let ax = a.lng * lonScale;
+    let ay = a.lat * latScale;
+    let bx = b.lng * lonScale;
+    let by = b.lat * latScale;
+
+    let dx = bx - ax;
+    let dy = by - ay;
+
+    let t = 0;
+
+    if(dx !== 0 || dy !== 0){
+      t = ((px - ax) * dx + (py - ay) * dy) / (dx * dx + dy * dy);
+      t = Math.max(0, Math.min(1, t));
+    }
+
+    let closestX = ax + t * dx;
+    let closestY = ay + t * dy;
+
+    let d = Math.sqrt(
+      Math.pow(px - closestX, 2) +
+      Math.pow(py - closestY, 2)
+    );
+
+    if(d < minDistance){
+      minDistance = d;
+    }
+
+  }
+
+  return minDistance;
+
+}
+
+function showOffRouteWarning(){
+
+  let warning = document.getElementById("offRouteWarning");
+
+  if(warning){
+    warning.style.display = "block";
+  }
+
+  setTimeout(function(){
+
+    if(warning){
+      warning.style.display = "none";
+    }
+
+  }, 5000);
+
+}
+
+function checkOffRoute(){
+
+  if(!routingControl || !activeTarget || currentRouteCoordinates.length < 2){
+    return;
+  }
+
+  let distanceFromRoute = distanceToRouteMeters(userLocation, currentRouteCoordinates);
+  let now = Date.now();
+
+  if(
+    distanceFromRoute > offRouteDistanceMeters &&
+    now - lastOffRouteAlertTime > offRouteAlertDelay
+  ){
+
+    lastOffRouteAlertTime = now;
+    showOffRouteWarning();
+
+    routingControl.setWaypoints([
+      L.latLng(userLocation),
+      L.latLng(activeTarget)
+    ]);
+
+    lastRouteUpdateLocation = [...userLocation];
+
+  }
+
+}
+
 const arrowIcon = L.divIcon({
 
   className:"",
@@ -328,6 +523,8 @@ function updateUserMarker(newLocation){
       newLocation[1]
 
     );
+
+    currentBearing = angle;
 
   }
 
@@ -358,6 +555,8 @@ function updateUserMarker(newLocation){
     `rotate(${angle}deg)`;
 
   }
+
+  applyNavigationMode(currentBearing);
 
   lastLocation = newLocation;
 
@@ -404,6 +603,7 @@ navigator.geolocation.watchPosition(function(pos){
 
   updateUserMarker(userLocation);
   checkAutoReroute();
+  checkOffRoute();
 
 }, function(){
 
@@ -1085,6 +1285,8 @@ function drawRoute(hospital){
 
   }
 
+  currentRouteCoordinates = [];
+
   routingControl =
   L.Routing.control({
 
@@ -1128,6 +1330,8 @@ function drawRoute(hospital){
   routingControl.on("routesfound",function(e){
 
     let route = e.routes[0];
+
+    currentRouteCoordinates = route.coordinates;
 
     updateRouteInfo(route);
     drawRouteArrows(route);
