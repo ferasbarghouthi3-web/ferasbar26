@@ -196,6 +196,17 @@ html,body{
 
 }
 
+.speed-box{
+
+  margin-top:8px;
+  padding:8px;
+  background:#f5f5f5;
+  border-radius:6px;
+  font-size:13px;
+
+}
+
+
 </style>
 </head>
 
@@ -242,6 +253,30 @@ html,body{
   <button onclick="goToSelectedHospital()">
     الانتقال للمستشفى المحدد
   </button>
+
+  <select id="routingProfile" onchange="changeRoutingProfile()">
+
+    <option value="driving">
+      مسار سيارة
+    </option>
+
+    <option value="walking">
+      مسار مشي
+    </option>
+
+    <option value="cycling">
+      مسار دراجة
+    </option>
+
+  </select>
+
+  <button onclick="recenterToUser()">
+    إعادة التمركز على موقعي
+  </button>
+
+  <div id="speedInfo" class="speed-box">
+    السرعة الحالية: غير متاحة
+  </div>
 
   <button id="navigationModeBtn" onclick="toggleNavigationMode()">
     تشغيل وضع الملاحة
@@ -308,6 +343,7 @@ let routeDecorator = null;
 let lastRouteUpdateLocation = null;
 let currentRouteCoordinates = [];
 let isNavigationMode = false;
+let selectedRoutingProfile = "driving";
 let currentBearing = 0;
 let lastOffRouteAlertTime = 0;
 
@@ -399,6 +435,54 @@ function resetMapRotation(){
 
   if(pane){
     pane.style.transform = pane.style.transform.replace(/ rotate\([^)]*\)/g, "");
+  }
+
+}
+
+
+function recenterToUser(){
+
+  if(!userLocation){
+
+    alert("لم يتم تحديد موقعك بعد");
+    return;
+
+  }
+
+  map.setView(userLocation, Math.max(map.getZoom(), 17), {
+    animate:true
+  });
+
+}
+
+function updateSpeed(speedMetersPerSecond){
+
+  let speedInfo = document.getElementById("speedInfo");
+
+  if(!speedInfo){
+    return;
+  }
+
+  if(speedMetersPerSecond === null || speedMetersPerSecond === undefined || isNaN(speedMetersPerSecond)){
+
+    speedInfo.innerHTML = "السرعة الحالية: غير متاحة";
+    return;
+
+  }
+
+  let speedKmH = speedMetersPerSecond * 3.6;
+  speedInfo.innerHTML = "السرعة الحالية: " + speedKmH.toFixed(1) + " كم/ساعة";
+
+}
+
+function changeRoutingProfile(){
+
+  selectedRoutingProfile = document.getElementById("routingProfile").value;
+
+  if(routingControl && activeTarget && userLocation){
+
+    drawRouteToTarget(activeTarget);
+
   }
 
 }
@@ -601,6 +685,7 @@ navigator.geolocation.watchPosition(function(pos){
 
   ];
 
+  updateSpeed(pos.coords.speed);
   updateUserMarker(userLocation);
   checkAutoReroute();
   checkOffRoute();
@@ -1269,6 +1354,19 @@ function drawRoute(hospital){
 
   ];
 
+  drawRouteToTarget(target);
+
+}
+
+function drawRouteToTarget(target){
+
+  if(!userLocation){
+
+    alert("لم يتم تحديد موقعك بعد");
+    return;
+
+  }
+
   activeTarget = target;
   lastRouteUpdateLocation = [...userLocation];
 
@@ -1290,7 +1388,14 @@ function drawRoute(hospital){
   routingControl =
   L.Routing.control({
 
-    waypoints:[
+    router:L.Routing.osrmV1({
+
+      serviceUrl:"https://router.project-osrm.org/route/v1",
+      profile:selectedRoutingProfile
+
+    }),
+
+    waypoints:
 
       L.latLng(userLocation),
       L.latLng(target)
@@ -1341,7 +1446,7 @@ function drawRoute(hospital){
   routingControl.on("routingerror",function(){
 
     document.getElementById("routeInfo").innerHTML =
-    `<b>معلومات المسار</b><br>تعذر حساب المسار. تأكد من اتصال الإنترنت وخدمة التوجيه.`;
+    `<b>معلومات المسار</b><br>تعذر حساب المسار لهذا النوع من التنقل. جرّب نوعاً آخر أو تأكد من اتصال الإنترنت.`;
 
   });
 
