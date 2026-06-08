@@ -121,6 +121,23 @@ html,body{
 
 }
 
+
+/* =========================
+    USER DIRECTION ARROW
+========================== */
+
+.user-arrow{
+
+  font-size:28px;
+  color:#007bff;
+  width:30px;
+  height:30px;
+  line-height:30px;
+  text-align:center;
+  transform-origin:center center;
+
+}
+
 /* =========================
     CONTROL POSITION
 ========================== */
@@ -228,22 +245,121 @@ let hospitals = [];
 let userLocation = null;
 let routingControl = null;
 
+let userMarker = null;
+let lastLocation = null;
+let activeTarget = null;
+
 /* =========================
-    USER LOCATION
+    USER LOCATION WITH DIRECTION
 ========================== */
 
-navigator.geolocation.getCurrentPosition(function(pos){
+function calculateBearing(lat1, lon1, lat2, lon2){
 
-  userLocation = [
+  lat1 = lat1 * Math.PI / 180;
+  lat2 = lat2 * Math.PI / 180;
+
+  let dLon =
+  (lon2 - lon1) * Math.PI / 180;
+
+  let y =
+  Math.sin(dLon) * Math.cos(lat2);
+
+  let x =
+  Math.cos(lat1) * Math.sin(lat2) -
+  Math.sin(lat1) * Math.cos(lat2) * Math.cos(dLon);
+
+  let bearing =
+  Math.atan2(y, x) * 180 / Math.PI;
+
+  return (bearing + 360) % 360;
+
+}
+
+const arrowIcon = L.divIcon({
+
+  className:"",
+  html:`<div id="userArrow" class="user-arrow">➤</div>`,
+  iconSize:[30,30],
+  iconAnchor:[15,15]
+
+});
+
+navigator.geolocation.watchPosition(function(pos){
+
+  let newLocation = [
 
     pos.coords.latitude,
     pos.coords.longitude
 
   ];
 
-  L.marker(userLocation)
-  .addTo(map)
-  .bindPopup("موقعك الحالي");
+  userLocation = newLocation;
+
+  let angle = 0;
+
+  if(lastLocation){
+
+    angle = calculateBearing(
+
+      lastLocation[0],
+      lastLocation[1],
+      newLocation[0],
+      newLocation[1]
+
+    );
+
+  }
+
+  if(!userMarker){
+
+    userMarker = L.marker(userLocation,{
+
+      icon:arrowIcon
+
+    })
+    .addTo(map)
+    .bindPopup("موقعك الحالي");
+
+  }
+
+  else{
+
+    userMarker.setLatLng(userLocation);
+
+  }
+
+  let arrow =
+  document.getElementById("userArrow");
+
+  if(arrow){
+
+    arrow.style.transform =
+    `rotate(${angle}deg)`;
+
+  }
+
+  lastLocation = newLocation;
+
+  if(routingControl && activeTarget){
+
+    routingControl.setWaypoints([
+
+      L.latLng(userLocation),
+      L.latLng(activeTarget)
+
+    ]);
+
+  }
+
+}, function(){
+
+  alert("لم يتم السماح بتحديد الموقع");
+
+}, {
+
+  enableHighAccuracy:true,
+  maximumAge:0,
+  timeout:10000
 
 });
 
@@ -779,12 +895,21 @@ function goToSelectedHospital(){
 
 function drawRoute(hospital){
 
+  if(!userLocation){
+
+    alert("لم يتم تحديد موقعك بعد");
+    return;
+
+  }
+
   const target = [
 
     hospital.geometry.coordinates[1],
     hospital.geometry.coordinates[0]
 
   ];
+
+  activeTarget = target;
 
   if(routingControl){
 
