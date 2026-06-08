@@ -121,23 +121,6 @@ html,body{
 
 }
 
-
-/* =========================
-    USER DIRECTION ARROW
-========================== */
-
-.user-arrow{
-
-  font-size:28px;
-  color:#007bff;
-  width:30px;
-  height:30px;
-  line-height:30px;
-  text-align:center;
-  transform-origin:center center;
-
-}
-
 /* =========================
     CONTROL POSITION
 ========================== */
@@ -153,6 +136,42 @@ html,body{
 
   bottom:10px;
   left:10px;
+
+}
+
+
+/* =========================
+    LIVE NAVIGATION PANEL
+========================== */
+
+.route-info{
+
+  margin-top:10px;
+  padding:8px;
+  background:#f7f7f7;
+  border-radius:8px;
+  font-size:12px;
+  line-height:1.7;
+  max-height:170px;
+  overflow:auto;
+
+}
+
+.route-info b{
+
+  color:#222;
+
+}
+
+.user-arrow{
+
+  font-size:28px;
+  color:#007bff;
+  width:30px;
+  height:30px;
+  line-height:30px;
+  text-align:center;
+  transform-origin:center center;
 
 }
 
@@ -203,6 +222,11 @@ html,body{
     الانتقال للمستشفى المحدد
   </button>
 
+  <div id="routeInfo" class="route-info">
+    <b>معلومات المسار</b><br>
+    اختر مستشفى لعرض المسافة والوقت والتعليمات.
+  </div>
+
 </div>
 
 <!-- LEAFLET -->
@@ -210,6 +234,9 @@ html,body{
 
 <!-- ROUTING -->
 <script src="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.js"></script>
+
+<!-- ROUTE ARROWS -->
+<script src="https://unpkg.com/leaflet-polylinedecorator@1.6.0/dist/leaflet.polylineDecorator.js"></script>
 
 <script>
 
@@ -248,9 +275,12 @@ let routingControl = null;
 let userMarker = null;
 let lastLocation = null;
 let activeTarget = null;
+let routeDecorator = null;
+let lastRouteUpdateLocation = null;
+const rerouteDistanceMeters = 20;
 
 /* =========================
-    USER LOCATION WITH DIRECTION
+    USER LOCATION + LIVE TRACKING + DIRECTION
 ========================== */
 
 function calculateBearing(lat1, lon1, lat2, lon2){
@@ -284,16 +314,7 @@ const arrowIcon = L.divIcon({
 
 });
 
-navigator.geolocation.watchPosition(function(pos){
-
-  let newLocation = [
-
-    pos.coords.latitude,
-    pos.coords.longitude
-
-  ];
-
-  userLocation = newLocation;
+function updateUserMarker(newLocation){
 
   let angle = 0;
 
@@ -312,7 +333,7 @@ navigator.geolocation.watchPosition(function(pos){
 
   if(!userMarker){
 
-    userMarker = L.marker(userLocation,{
+    userMarker = L.marker(newLocation,{
 
       icon:arrowIcon
 
@@ -324,7 +345,7 @@ navigator.geolocation.watchPosition(function(pos){
 
   else{
 
-    userMarker.setLatLng(userLocation);
+    userMarker.setLatLng(newLocation);
 
   }
 
@@ -340,7 +361,24 @@ navigator.geolocation.watchPosition(function(pos){
 
   lastLocation = newLocation;
 
-  if(routingControl && activeTarget){
+}
+
+function checkAutoReroute(){
+
+  if(!routingControl || !activeTarget || !lastRouteUpdateLocation){
+    return;
+  }
+
+  let movedMeters = distance(
+
+    lastRouteUpdateLocation[0],
+    lastRouteUpdateLocation[1],
+    userLocation[0],
+    userLocation[1]
+
+  ) * 1000;
+
+  if(movedMeters >= rerouteDistanceMeters){
 
     routingControl.setWaypoints([
 
@@ -349,7 +387,23 @@ navigator.geolocation.watchPosition(function(pos){
 
     ]);
 
+    lastRouteUpdateLocation = [...userLocation];
+
   }
+
+}
+
+navigator.geolocation.watchPosition(function(pos){
+
+  userLocation = [
+
+    pos.coords.latitude,
+    pos.coords.longitude
+
+  ];
+
+  updateUserMarker(userLocation);
+  checkAutoReroute();
 
 }, function(){
 
@@ -889,6 +943,112 @@ function goToSelectedHospital(){
 
 }
 
+
+/* =========================
+    ROUTE INFO + INSTRUCTIONS + ARROWS
+========================== */
+
+function formatDistance(meters){
+
+  if(meters >= 1000){
+    return (meters / 1000).toFixed(2) + " كم";
+  }
+
+  return Math.round(meters) + " متر";
+
+}
+
+function formatTime(seconds){
+
+  let minutes = Math.round(seconds / 60);
+
+  if(minutes < 60){
+    return minutes + " دقيقة";
+  }
+
+  let hours = Math.floor(minutes / 60);
+  let remainingMinutes = minutes % 60;
+
+  return hours + " ساعة و " + remainingMinutes + " دقيقة";
+
+}
+
+function updateRouteInfo(route){
+
+  let routeInfo =
+  document.getElementById("routeInfo");
+
+  let distanceText =
+  formatDistance(route.summary.totalDistance);
+
+  let timeText =
+  formatTime(route.summary.totalTime);
+
+  let instructionsHtml = "";
+
+  if(route.instructions && route.instructions.length > 0){
+
+    instructionsHtml =
+    route.instructions
+    .slice(0,8)
+    .map((instruction,index)=>{
+
+      return `${index + 1}. ${instruction.text}`;
+
+    })
+    .join("<br>");
+
+  }
+
+  routeInfo.innerHTML = `
+
+    <b>معلومات المسار</b><br>
+    المسافة: ${distanceText}<br>
+    الوقت المتوقع: ${timeText}<br><br>
+    <b>تعليمات الملاحة</b><br>
+    ${instructionsHtml || "لا توجد تعليمات متاحة"}
+
+  `;
+
+}
+
+function drawRouteArrows(route){
+
+  if(routeDecorator){
+
+    map.removeLayer(routeDecorator);
+
+  }
+
+  let coordinates =
+  route.coordinates.map(c=>[c.lat,c.lng]);
+
+  routeDecorator = L.polylineDecorator(coordinates,{
+
+    patterns:[
+
+      {
+        offset:25,
+        repeat:80,
+        symbol:L.Symbol.arrowHead({
+
+          pixelSize:12,
+          polygon:false,
+          pathOptions:{
+            stroke:true,
+            weight:2,
+            color:"#0066ff"
+          }
+
+        })
+      }
+
+    ]
+
+  }).addTo(map);
+
+}
+
 /* =========================
     DRAW ROUTE
 ========================== */
@@ -910,10 +1070,18 @@ function drawRoute(hospital){
   ];
 
   activeTarget = target;
+  lastRouteUpdateLocation = [...userLocation];
 
   if(routingControl){
 
     map.removeControl(routingControl);
+
+  }
+
+  if(routeDecorator){
+
+    map.removeLayer(routeDecorator);
+    routeDecorator = null;
 
   }
 
@@ -935,9 +1103,43 @@ function drawRoute(hospital){
 
     fitSelectedRoutes:true,
 
-    show:false
+    show:false,
+
+    lineOptions:{
+
+      styles:[
+
+        {
+          color:"#0066ff",
+          weight:6,
+          opacity:0.8
+        }
+
+      ]
+
+    },
+
+    createMarker:function(){
+      return null;
+    }
 
   }).addTo(map);
+
+  routingControl.on("routesfound",function(e){
+
+    let route = e.routes[0];
+
+    updateRouteInfo(route);
+    drawRouteArrows(route);
+
+  });
+
+  routingControl.on("routingerror",function(){
+
+    document.getElementById("routeInfo").innerHTML =
+    `<b>معلومات المسار</b><br>تعذر حساب المسار. تأكد من اتصال الإنترنت وخدمة التوجيه.`;
+
+  });
 
 }
 
