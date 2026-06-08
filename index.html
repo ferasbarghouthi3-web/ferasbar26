@@ -247,6 +247,21 @@ html,body{
     تشغيل وضع الملاحة
   </button>
 
+  <button id="centerLocationBtn" onclick="centerOnMyLocation()">
+    إعادة التمركز على موقعي
+  </button>
+
+  <select id="travelMode" onchange="changeTravelMode()">
+    <option value="car">سيارة</option>
+    <option value="foot">مشي</option>
+    <option value="bike">دراجة</option>
+  </select>
+
+  <div class="route-info">
+    <b>السرعة الحالية</b><br>
+    <span id="speedValue">0 كم/ساعة</span>
+  </div>
+
   <div id="offRouteWarning" class="off-route-warning">
     لقد خرجت عن المسار، جارٍ إعادة التوجيه...
   </div>
@@ -310,6 +325,7 @@ let currentRouteCoordinates = [];
 let isNavigationMode = false;
 let currentBearing = 0;
 let lastOffRouteAlertTime = 0;
+let currentTravelMode = "car";
 
 const rerouteDistanceMeters = 20;
 const offRouteDistanceMeters = 50;
@@ -365,6 +381,69 @@ function toggleNavigationMode(){
     resetMapRotation();
 
   }
+
+}
+
+function centerOnMyLocation(){
+
+  if(!userLocation){
+
+    alert("لم يتم تحديد موقعك بعد");
+    return;
+
+  }
+
+  map.setView(userLocation, 17, {
+    animate:true
+  });
+
+}
+
+function changeTravelMode(){
+
+  currentTravelMode =
+  document.getElementById("travelMode").value;
+
+  if(routingControl && activeTarget && userLocation){
+
+    let fakeHospital = {
+      geometry:{
+        coordinates:[
+          activeTarget[1],
+          activeTarget[0]
+        ]
+      }
+    };
+
+    drawRoute(fakeHospital);
+
+  }
+
+}
+
+function updateSpeed(pos){
+
+  let speedElement =
+  document.getElementById("speedValue");
+
+  if(!speedElement){
+    return;
+  }
+
+  let speed = pos.coords.speed;
+
+  if(speed === null || speed === undefined){
+
+    speedElement.innerHTML = "غير متوفرة";
+    return;
+
+  }
+
+  let speedKmh =
+  speed * 3.6;
+
+  speedElement.innerHTML =
+  speedKmh.toFixed(1) + " كم/ساعة";
 
 }
 
@@ -602,6 +681,7 @@ navigator.geolocation.watchPosition(function(pos){
   ];
 
   updateUserMarker(userLocation);
+  updateSpeed(pos);
   checkAutoReroute();
   checkOffRoute();
 
@@ -1289,6 +1369,10 @@ function drawRoute(hospital){
 
   routingControl =
   L.Routing.control({
+
+    router: L.Routing.osrmv1({
+      profile: currentTravelMode
+    }),
 
     waypoints:[
 
