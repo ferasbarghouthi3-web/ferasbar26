@@ -447,6 +447,19 @@ const offRouteDistanceMeters = 50;
 const offRouteAlertDelay = 8000;
 
 /* =========================
+    LOGICAL TRAVEL SPEEDS
+    car: داخل المدينة
+    foot: مشي
+    bike: دراجة
+========================== */
+
+const modeSpeeds = {
+  car: 35,
+  foot: 5,
+  bike: 15
+};
+
+/* =========================
     USER LOCATION + LIVE TRACKING + DIRECTION
 ========================== */
 
@@ -1376,8 +1389,20 @@ function updateRouteInfo(route){
   let distanceText =
   formatDistance(route.summary.totalDistance);
 
+  let selectedMode =
+  document.getElementById("travelMode").value;
+
+  let speedKmh =
+  modeSpeeds[selectedMode] || 35;
+
+  let distanceKm =
+  route.summary.totalDistance / 1000;
+
+  let calculatedTimeSeconds =
+  (distanceKm / speedKmh) * 3600;
+
   let timeText =
-  formatTime(route.summary.totalTime);
+  formatTime(calculatedTimeSeconds);
 
   let instructionsHtml = "";
 
