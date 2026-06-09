@@ -196,6 +196,89 @@ html,body{
 
 }
 
+
+/* =========================
+    MOBILE RESPONSIVE + COLLAPSE DETAILS
+========================== */
+
+@media screen and (max-width: 768px){
+
+  .control-box{
+
+    width:180px;
+    padding:8px;
+    bottom:10px;
+    right:10px;
+    font-size:11px;
+
+  }
+
+  .control-box b{
+
+    font-size:12px;
+
+  }
+
+  .control-box select,
+  .control-box button{
+
+    padding:5px;
+    margin-top:5px;
+    font-size:11px;
+
+  }
+
+  .route-info{
+
+    font-size:10px;
+    max-height:90px;
+    padding:6px;
+
+  }
+
+  .off-route-warning{
+
+    font-size:10px;
+    padding:6px;
+
+  }
+
+  #routeDetailsBox{
+
+    display:none;
+
+  }
+
+}
+
+@media screen and (max-width: 480px){
+
+  .control-box{
+
+    width:155px;
+    padding:6px;
+    bottom:8px;
+    right:8px;
+
+  }
+
+  .control-box select,
+  .control-box button{
+
+    font-size:10px;
+    padding:4px;
+
+  }
+
+  .route-info{
+
+    font-size:9px;
+    max-height:70px;
+
+  }
+
+}
+
 </style>
 </head>
 
@@ -257,18 +340,26 @@ html,body{
     <option value="bike">دراجة</option>
   </select>
 
-  <div class="route-info">
-    <b>السرعة الحالية</b><br>
-    <span id="speedValue">0 كم/ساعة</span>
-  </div>
+  <button id="toggleDetailsBtn" onclick="toggleRouteDetails()">
+    عرض / إخفاء تفاصيل الملاحة
+  </button>
 
-  <div id="offRouteWarning" class="off-route-warning">
-    لقد خرجت عن المسار، جارٍ إعادة التوجيه...
-  </div>
+  <div id="routeDetailsBox">
 
-  <div id="routeInfo" class="route-info">
-    <b>معلومات المسار</b><br>
-    اختر مستشفى لعرض المسافة والوقت والتعليمات.
+    <div class="route-info">
+      <b>السرعة الحالية</b><br>
+      <span id="speedValue">0 كم/ساعة</span>
+    </div>
+
+    <div id="offRouteWarning" class="off-route-warning">
+      لقد خرجت عن المسار، جارٍ إعادة التوجيه...
+    </div>
+
+    <div id="routeInfo" class="route-info">
+      <b>معلومات المسار</b><br>
+      اختر مستشفى لعرض المسافة والوقت والتعليمات.
+    </div>
+
   </div>
 
 </div>
@@ -283,6 +374,30 @@ html,body{
 <script src="https://unpkg.com/leaflet-polylinedecorator@1.6.0/dist/leaflet.polylineDecorator.js"></script>
 
 <script>
+
+
+function toggleRouteDetails(){
+
+  let box =
+  document.getElementById("routeDetailsBox");
+
+  if(!box){
+    return;
+  }
+
+  if(box.style.display === "none" || getComputedStyle(box).display === "none"){
+
+    box.style.display = "block";
+
+  }
+
+  else{
+
+    box.style.display = "none";
+
+  }
+
+}
 
 /* =========================
     MAP
