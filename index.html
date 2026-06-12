@@ -340,6 +340,10 @@ html,body{
     <option value="bike">دراجة</option>
   </select>
 
+  <button id="voiceNavigationBtn" onclick="toggleVoiceNavigation()">
+    إيقاف الملاحة الصوتية
+  </button>
+
   <button id="toggleDetailsBtn" onclick="toggleRouteDetails()">
     عرض / إخفاء تفاصيل الملاحة
   </button>
@@ -441,6 +445,8 @@ let isNavigationMode = false;
 let currentBearing = 0;
 let lastOffRouteAlertTime = 0;
 let currentTravelMode = "car";
+let voiceNavigation = true;
+let lastSpokenInstruction = "";
 
 const rerouteDistanceMeters = 20;
 const offRouteDistanceMeters = 50;
@@ -1381,6 +1387,90 @@ function formatTime(seconds){
 
 }
 
+
+function toggleVoiceNavigation(){
+
+  voiceNavigation = !voiceNavigation;
+
+  let btn = document.getElementById("voiceNavigationBtn");
+
+  if(voiceNavigation){
+
+    if(btn){
+      btn.innerText = "إيقاف الملاحة الصوتية";
+      btn.classList.add("nav-active-button");
+    }
+
+  }
+
+  else{
+
+    if("speechSynthesis" in window){
+      speechSynthesis.cancel();
+    }
+
+    if(btn){
+      btn.innerText = "تشغيل الملاحة الصوتية";
+      btn.classList.remove("nav-active-button");
+    }
+
+  }
+
+}
+
+function speakInstruction(text){
+
+  if(!voiceNavigation){
+    return;
+  }
+
+  if(!("speechSynthesis" in window)){
+    return;
+  }
+
+  if(!text || text.trim() === ""){
+    return;
+  }
+
+  speechSynthesis.cancel();
+
+  let speech =
+  new SpeechSynthesisUtterance(text);
+
+  speech.lang = "ar-SA";
+  speech.rate = 1;
+  speech.pitch = 1;
+
+  speechSynthesis.speak(speech);
+
+}
+
+function speakFirstRouteInstruction(route){
+
+  if(
+    !route.instructions ||
+    route.instructions.length === 0
+  ){
+    return;
+  }
+
+  let firstInstruction =
+  route.instructions[0].text;
+
+  if(
+    firstInstruction &&
+    firstInstruction !== lastSpokenInstruction
+  ){
+
+    speakInstruction(firstInstruction);
+
+    lastSpokenInstruction =
+    firstInstruction;
+
+  }
+
+}
+
 function updateRouteInfo(route){
 
   let routeInfo =
@@ -1554,6 +1644,8 @@ function drawRoute(hospital){
   routingControl.on("routesfound",function(e){
 
     let route = e.routes[0];
+
+    speakFirstRouteInstruction(route);
 
     currentRouteCoordinates = route.coordinates;
 
