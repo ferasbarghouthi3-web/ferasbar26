@@ -507,11 +507,11 @@ map.createPane("roadsPane");
 map.getPane("roadsPane").style.zIndex = 650;
 
 map.createPane("routePane");
-map.getPane("routePane").style.zIndex = 900;
+map.getPane("routePane").style.zIndex = 1200;
 map.getPane("routePane").style.pointerEvents = "none";
 
 map.createPane("healthPane");
-map.getPane("healthPane").style.zIndex = 1000;
+map.getPane("healthPane").style.zIndex = 1300;
 map.getPane("healthPane").style.pointerEvents = "auto";
 
 /* =========================
@@ -544,6 +544,7 @@ let userMarker = null;
 let lastLocation = null;
 let activeTarget = null;
 let routeDecorator = null;
+let routeLine = null;
 let lastRouteUpdateLocation = null;
 let currentRouteCoordinates = [];
 let isNavigationMode = false;
@@ -1648,6 +1649,34 @@ function updateRouteInfo(route){
 
 }
 
+function drawMainRouteLine(route){
+
+  if(routeLine){
+
+    map.removeLayer(routeLine);
+    routeLine = null;
+
+  }
+
+  let coordinates =
+  route.coordinates.map(c=>[c.lat,c.lng]);
+
+  routeLine = L.polyline(coordinates,{
+
+    pane:"routePane",
+    color:"#0066ff",
+    weight:8,
+    opacity:1,
+    interactive:false
+
+  }).addTo(map);
+
+  if(routeLine.bringToFront){
+    routeLine.bringToFront();
+  }
+
+}
+
 function drawRouteArrows(route){
 
   if(routeDecorator){
@@ -1724,6 +1753,13 @@ function drawRoute(hospital){
 
   }
 
+  if(routeLine){
+
+    map.removeLayer(routeLine);
+    routeLine = null;
+
+  }
+
   currentRouteCoordinates = [];
 
   routingControl =
@@ -1758,8 +1794,8 @@ function drawRoute(hospital){
 
         {
           color:"#0066ff",
-          weight:6,
-          opacity:0.8
+          weight:1,
+          opacity:0
         }
 
       ]
@@ -1781,17 +1817,18 @@ function drawRoute(hospital){
     currentRouteCoordinates = route.coordinates;
 
     updateRouteInfo(route);
+    drawMainRouteLine(route);
     drawRouteArrows(route);
 
     // تأكيد ظهور المسار فوق طبقات الأحياء والحدود
     setTimeout(function(){
       let routePane = map.getPane("routePane");
       if(routePane){
-        routePane.style.zIndex = 900;
+        routePane.style.zIndex = 1200;
       }
       let healthPane = map.getPane("healthPane");
       if(healthPane){
-        healthPane.style.zIndex = 1000;
+        healthPane.style.zIndex = 1300;
       }
     },100);
 
