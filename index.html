@@ -492,8 +492,9 @@ var map = L.map("map").setView([31.9038,35.2034],11);
     MAP PANES ORDER
     boundaryPane: حدود المحافظة
     livingPane: الأحياء في الأسفل
-    roadsPane: الطرق فوق الأحياء
-    healthPane: المستشفيات فوق كل الطبقات
+    roadsPane: شبكة الطرق الرمادية فوق الأحياء
+    routePane: خط المسار الأزرق فوق كل الطبقات المضلعة
+    healthPane: المستشفيات فوق المسار والطبقات
 ========================== */
 
 map.createPane("boundaryPane");
@@ -504,6 +505,10 @@ map.getPane("livingPane").style.zIndex = 400;
 
 map.createPane("roadsPane");
 map.getPane("roadsPane").style.zIndex = 650;
+
+map.createPane("routePane");
+map.getPane("routePane").style.zIndex = 900;
+map.getPane("routePane").style.pointerEvents = "none";
 
 map.createPane("healthPane");
 map.getPane("healthPane").style.zIndex = 1000;
@@ -1656,6 +1661,8 @@ function drawRouteArrows(route){
 
   routeDecorator = L.polylineDecorator(coordinates,{
 
+    pane:"routePane",
+
     patterns:[
 
       {
@@ -1666,6 +1673,7 @@ function drawRouteArrows(route){
           pixelSize:12,
           polygon:false,
           pathOptions:{
+            pane:"routePane",
             stroke:true,
             weight:2,
             color:"#0066ff"
@@ -1744,6 +1752,8 @@ function drawRoute(hospital){
 
     lineOptions:{
 
+      pane:"routePane",
+
       styles:[
 
         {
@@ -1772,6 +1782,18 @@ function drawRoute(hospital){
 
     updateRouteInfo(route);
     drawRouteArrows(route);
+
+    // تأكيد ظهور المسار فوق طبقات الأحياء والحدود
+    setTimeout(function(){
+      let routePane = map.getPane("routePane");
+      if(routePane){
+        routePane.style.zIndex = 900;
+      }
+      let healthPane = map.getPane("healthPane");
+      if(healthPane){
+        healthPane.style.zIndex = 1000;
+      }
+    },100);
 
   });
 
