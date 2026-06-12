@@ -279,6 +279,76 @@ html,body{
 
 }
 
+/* =========================
+    CUSTOM MAP SYMBOLS
+========================== */
+
+.hospital-icon{
+
+  background:#e53935;
+  color:white;
+  border:2px solid white;
+  border-radius:50%;
+  width:26px;
+  height:26px;
+  line-height:26px;
+  text-align:center;
+  font-weight:bold;
+  font-size:16px;
+  box-shadow:0 0 6px rgba(0,0,0,0.45);
+
+}
+
+.legend-title{
+
+  font-weight:bold;
+  margin-bottom:8px;
+  font-size:14px;
+
+}
+
+.legend-item{
+
+  display:flex;
+  align-items:center;
+  gap:7px;
+  margin-bottom:6px;
+
+}
+
+.legend-symbol{
+
+  width:18px;
+  height:14px;
+  display:inline-block;
+  border-radius:2px;
+
+}
+
+.legend-line{
+
+  width:24px;
+  height:0;
+  display:inline-block;
+  border-top:4px solid #777777;
+
+}
+
+.legend-hospital{
+
+  width:20px;
+  height:20px;
+  line-height:20px;
+  text-align:center;
+  border-radius:50%;
+  background:#e53935;
+  color:white;
+  border:1px solid white;
+  font-weight:bold;
+  display:inline-block;
+
+}
+
 </style>
 </head>
 
@@ -879,9 +949,6 @@ Promise.all([
   fetch("Living.json")
   .then(r=>r.json()),
 
-  fetch("Parking.json")
-  .then(r=>r.json()),
-
   fetch("Health_Services.json")
   .then(r=>r.json())
 
@@ -898,7 +965,6 @@ function initLayers(data){
     boundary,
     roads,
     living,
-    parking,
     health
 
   ] = data;
@@ -911,7 +977,7 @@ function initLayers(data){
 
     style:{
 
-      color:"#ffffff",
+      color:"#000000",
       weight:3,
       fillOpacity:0
 
@@ -939,8 +1005,9 @@ function initLayers(data){
 
         return{
 
-          color:"#ff3300",
-          weight:5
+          color:"#555555",
+          weight:4,
+          opacity:0.9
 
         };
 
@@ -950,8 +1017,9 @@ function initLayers(data){
 
         return{
 
-          color:"#ffaa00",
-          weight:2
+          color:"#888888",
+          weight:2,
+          opacity:0.8
 
         };
 
@@ -971,28 +1039,10 @@ function initLayers(data){
 
     style:{
 
-      color:"#00bfff",
-      weight:2,
-      fillOpacity:0
-
-    },
-
-    onEachFeature:popupAttributes
-
-  }).addTo(map);
-
-  /* =========================
-      PARKING
-  ========================== */
-
-  var parkingLayer = L.geoJSON(parking,{
-
-    style:{
-
-      color:"#1b5e20",
+      color:"#000000",
       weight:1.5,
-      fillColor:"#2e7d32",
-      fillOpacity:0.8
+      fillColor:"#f3e2c7",
+      fillOpacity:0.65
 
     },
 
@@ -1008,14 +1058,18 @@ function initLayers(data){
 
     pointToLayer:function(feature,latlng){
 
-      return L.circleMarker(latlng,{
+      let hospitalIcon = L.divIcon({
 
-        radius:6,
-        fillColor:"#ff0000",
-        color:"#ffffff",
-        weight:1,
-        fillOpacity:0.9
+        className:"hospital-icon",
+        html:"H",
+        iconSize:[26,26],
+        iconAnchor:[13,13],
+        popupAnchor:[0,-13]
 
+      });
+
+      return L.marker(latlng,{
+        icon:hospitalIcon
       });
 
     },
@@ -1073,9 +1127,6 @@ function initLayers(data){
     "Living Areas":
     livingLayer,
 
-    "Parking":
-    parkingLayer,
-
     "Health Services":
     healthLayer
 
@@ -1111,55 +1162,26 @@ function initLayers(data){
 
     div.innerHTML = `
 
-      <b>Legend</b><br><br>
+      <div class="legend-title">Legend</div>
 
-      <div>
-        <span style="
-        width:16px;
-        height:16px;
-        background:#ff3300;
-        display:inline-block;
-        ">
-        </span>
-
-        Regional Roads
+      <div class="legend-item">
+        <span class="legend-symbol" style="background:#f3e2c7; border:1.5px solid #000000;"></span>
+        <span>Living Areas</span>
       </div>
 
-      <div>
-        <span style="
-        width:16px;
-        height:16px;
-        background:#ffaa00;
-        display:inline-block;
-        ">
-        </span>
-
-        Internal Roads
+      <div class="legend-item">
+        <span class="legend-line"></span>
+        <span>Road Network</span>
       </div>
 
-      <div>
-        <span style="
-        width:16px;
-        height:16px;
-        background:#2e7d32;
-        display:inline-block;
-        ">
-        </span>
-
-        Parking
+      <div class="legend-item">
+        <span class="legend-symbol" style="background:transparent; border:2px solid #000000;"></span>
+        <span>Ramallah Boundary</span>
       </div>
 
-      <div>
-        <span style="
-        width:16px;
-        height:16px;
-        background:#ff0000;
-        border-radius:50%;
-        display:inline-block;
-        ">
-        </span>
-
-        Health Services
+      <div class="legend-item">
+        <span class="legend-hospital">H</span>
+        <span>Health Services</span>
       </div>
 
     `;
