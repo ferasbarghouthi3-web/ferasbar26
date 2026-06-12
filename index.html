@@ -490,19 +490,24 @@ var map = L.map("map").setView([31.9038,35.2034],11);
 
 /* =========================
     MAP PANES ORDER
+    boundaryPane: حدود المحافظة
     livingPane: الأحياء في الأسفل
     roadsPane: الطرق فوق الأحياء
-    healthPane: المستشفيات فوق الجميع
+    healthPane: المستشفيات فوق كل الطبقات
 ========================== */
 
+map.createPane("boundaryPane");
+map.getPane("boundaryPane").style.zIndex = 300;
+
 map.createPane("livingPane");
-map.getPane("livingPane").style.zIndex = 410;
+map.getPane("livingPane").style.zIndex = 400;
 
 map.createPane("roadsPane");
 map.getPane("roadsPane").style.zIndex = 650;
 
 map.createPane("healthPane");
-map.getPane("healthPane").style.zIndex = 800;
+map.getPane("healthPane").style.zIndex = 1000;
+map.getPane("healthPane").style.pointerEvents = "auto";
 
 /* =========================
     BASEMAPS
@@ -1000,6 +1005,8 @@ function initLayers(data){
 
   var boundaryLayer = L.geoJSON(boundary,{
 
+    pane:"boundaryPane",
+
     style:{
 
       color:"#000000",
@@ -1100,8 +1107,9 @@ function initLayers(data){
       });
 
       return L.marker(latlng,{
+        pane:"healthPane",
         icon:hospitalIcon,
-        zIndexOffset:1000
+        zIndexOffset:10000
       });
 
     },
@@ -1167,26 +1175,56 @@ function initLayers(data){
   // سيتم إضافة بوكس التحكم بالطبقات بعد الليجند
   // حتى يظهر فوقه في الجهة اليسرى السفلية
 
-  // ضمان بقاء الطرق فوق الأحياء بعد تشغيل/إطفاء الطبقات
-  map.on("overlayadd", function(e){
+  // ترتيب الطبقات بعد تشغيل/إطفاء أي لاير
+  function keepLayerOrder(){
 
-    if(livingLayer){
+    if(boundaryLayer && boundaryLayer.bringToBack){
+      boundaryLayer.bringToBack();
+    }
+
+    if(livingLayer && livingLayer.bringToBack){
       livingLayer.bringToBack();
     }
 
-    if(roadsLayer){
+    if(roadsLayer && roadsLayer.bringToFront){
       roadsLayer.bringToFront();
     }
 
     if(healthLayer){
-      healthLayer.bringToFront();
+
+      healthLayer.eachLayer(function(layer){
+
+        if(layer.setZIndexOffset){
+          layer.setZIndexOffset(10000);
+        }
+
+        if(layer.bringToFront){
+          layer.bringToFront();
+        }
+
+      });
+
+      if(healthLayer.bringToFront){
+        healthLayer.bringToFront();
+      }
+
     }
+
+  }
+
+  map.on("overlayadd", function(){
+
+    setTimeout(keepLayerOrder, 100);
 
   });
 
-  livingLayer.bringToBack();
-  roadsLayer.bringToFront();
-  healthLayer.bringToFront();
+  map.on("zoomend moveend", function(){
+
+    setTimeout(keepLayerOrder, 100);
+
+  });
+
+  setTimeout(keepLayerOrder, 500);
 
   /* =========================
       LEGEND
