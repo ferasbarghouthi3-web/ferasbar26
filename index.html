@@ -480,6 +480,22 @@ function toggleRouteDetails(){
 var map = L.map("map").setView([31.9038,35.2034],11);
 
 /* =========================
+    MAP PANES ORDER
+    livingPane: الأحياء في الأسفل
+    roadsPane: الطرق فوق الأحياء
+    healthPane: المستشفيات فوق الجميع
+========================== */
+
+map.createPane("livingPane");
+map.getPane("livingPane").style.zIndex = 410;
+
+map.createPane("roadsPane");
+map.getPane("roadsPane").style.zIndex = 650;
+
+map.createPane("healthPane");
+map.getPane("healthPane").style.zIndex = 700;
+
+/* =========================
     BASEMAPS
 ========================== */
 
@@ -993,6 +1009,8 @@ function initLayers(data){
 
   var roadsLayer = L.geoJSON(roads,{
 
+    pane:"roadsPane",
+
     style:function(feature){
 
       let roadType =
@@ -1037,6 +1055,8 @@ function initLayers(data){
 
   var livingLayer = L.geoJSON(living,{
 
+    pane:"livingPane",
+
     style:{
 
       color:"#000000",
@@ -1055,6 +1075,8 @@ function initLayers(data){
   ========================== */
 
   var healthLayer = L.geoJSON(health,{
+
+    pane:"healthPane",
 
     pointToLayer:function(feature,latlng){
 
@@ -1142,6 +1164,27 @@ function initLayers(data){
     }
 
   ).addTo(map);
+
+  // ضمان بقاء الطرق فوق الأحياء بعد تشغيل/إطفاء الطبقات
+  map.on("overlayadd", function(){
+
+    if(livingLayer){
+      livingLayer.bringToBack();
+    }
+
+    if(roadsLayer){
+      roadsLayer.bringToFront();
+    }
+
+    if(healthLayer){
+      healthLayer.bringToFront();
+    }
+
+  });
+
+  livingLayer.bringToBack();
+  roadsLayer.bringToFront();
+  healthLayer.bringToFront();
 
   /* =========================
       LEGEND
