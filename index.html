@@ -139,6 +139,15 @@ html,body{
 
 }
 
+/* Layer control فوق الليجند */
+.leaflet-bottom.leaflet-left .leaflet-control-layers{
+
+  margin-bottom:10px;
+  border-radius:10px;
+  box-shadow:0 0 10px rgba(0,0,0,0.3);
+
+}
+
 
 /* =========================
     LIVE NAVIGATION PANEL
@@ -493,7 +502,7 @@ map.createPane("roadsPane");
 map.getPane("roadsPane").style.zIndex = 650;
 
 map.createPane("healthPane");
-map.getPane("healthPane").style.zIndex = 700;
+map.getPane("healthPane").style.zIndex = 800;
 
 /* =========================
     BASEMAPS
@@ -1091,7 +1100,8 @@ function initLayers(data){
       });
 
       return L.marker(latlng,{
-        icon:hospitalIcon
+        icon:hospitalIcon,
+        zIndexOffset:1000
       });
 
     },
@@ -1154,19 +1164,11 @@ function initLayers(data){
 
   };
 
-  L.control.layers(
-
-    baseMaps,
-    overlayMaps,
-
-    {
-      collapsed:false
-    }
-
-  ).addTo(map);
+  // سيتم إضافة بوكس التحكم بالطبقات بعد الليجند
+  // حتى يظهر فوقه في الجهة اليسرى السفلية
 
   // ضمان بقاء الطرق فوق الأحياء بعد تشغيل/إطفاء الطبقات
-  map.on("overlayadd", function(){
+  map.on("overlayadd", function(e){
 
     if(livingLayer){
       livingLayer.bringToBack();
@@ -1234,6 +1236,22 @@ function initLayers(data){
   };
 
   legend.addTo(map);
+
+  /* =========================
+      LAYER CONTROL ABOVE LEGEND
+  ========================== */
+
+  L.control.layers(
+
+    baseMaps,
+    overlayMaps,
+
+    {
+      collapsed:false,
+      position:"bottomleft"
+    }
+
+  ).addTo(map);
 
 }
 
