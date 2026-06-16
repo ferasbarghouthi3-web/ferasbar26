@@ -3,158 +3,61 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-
 <title>Ramallah Web GIS</title>
 
-<!-- LEAFLET -->
-<link rel="stylesheet"
-href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
-
-<!-- ROUTING -->
-<link rel="stylesheet"
-href="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.css"/>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.css"/>
 
 <style>
-
-html,body{
-
-  margin:0;
-  height:100%;
-  font-family:Arial;
-
-}
-
-#map{
-
-  width:100%;
-  height:100%;
-
-}
-
-/* =========================
-    CONTROL BOX
-========================== */
+html,body{margin:0;height:100%;font-family:Arial;}
+#map{width:100%;height:100%;}
 
 .control-box{
-
   position:absolute;
-
   bottom:20px;
   right:20px;
-
   z-index:1000;
-
   background:white;
-
   padding:12px;
-
   border-radius:10px;
-
   box-shadow:0 0 10px rgba(0,0,0,0.3);
-
   width:260px;
-
 }
 
 .control-box select,
 .control-box button{
-
   width:100%;
-
   margin-top:8px;
-
   padding:8px;
-
   border-radius:6px;
-
   border:1px solid #ccc;
-
   font-size:13px;
-
   cursor:pointer;
-
 }
 
-/* =========================
-    POPUP
-========================== */
-
-.popup-table{
-
-  border-collapse:collapse;
-  width:100%;
-
-}
-
-.popup-table td{
-
-  border-bottom:1px solid #ddd;
-  padding:4px;
-  font-size:12px;
-
-}
-
-.popup-title{
-
-  font-weight:bold;
-  margin-bottom:6px;
-
-}
-
-/* =========================
-    LEGEND
-========================== */
-
-.legend{
-
+.dashboard{
+  position:absolute;
+  top:20px;
+  left:20px;
+  z-index:1000;
   background:white;
-
-  padding:10px;
-
+  padding:12px;
   border-radius:10px;
-
-  box-shadow:0 0 10px rgba(0,0,0,0.3);
-
-  line-height:22px;
-
+  box-shadow:0 0 10px rgba(0,0,0,.3);
+  width:260px;
   font-size:13px;
-
+  line-height:1.7;
 }
 
-/* =========================
-    CONTROL POSITION
-========================== */
-
-.leaflet-top.leaflet-right{
-
-  top:10px;
-  right:10px;
-
+.top-hospitals{
+  margin-top:10px;
+  padding:8px;
+  background:#f7f7f7;
+  border-radius:8px;
+  font-size:12px;
 }
-
-.leaflet-bottom.leaflet-left{
-
-  bottom:10px;
-  left:10px;
-
-}
-
-/* Layer control فوق الليجند */
-.leaflet-bottom.leaflet-left .leaflet-control-layers{
-
-  margin-bottom:10px;
-  border-radius:10px;
-  box-shadow:0 0 10px rgba(0,0,0,0.3);
-
-}
-
-
-/* =========================
-    LIVE NAVIGATION PANEL
-========================== */
 
 .route-info{
-
   margin-top:10px;
   padding:8px;
   background:#f7f7f7;
@@ -163,37 +66,9 @@ html,body{
   line-height:1.7;
   max-height:170px;
   overflow:auto;
-
-}
-
-.route-info b{
-
-  color:#222;
-
-}
-
-.user-arrow{
-
-  font-size:28px;
-  color:#007bff;
-  width:30px;
-  height:30px;
-  line-height:30px;
-  text-align:center;
-  transform-origin:center center;
-
-}
-
-.nav-active-button{
-
-  background:#007bff !important;
-  color:white;
-  font-weight:bold;
-
 }
 
 .off-route-warning{
-
   margin-top:8px;
   padding:8px;
   background:#fff3cd;
@@ -202,98 +77,53 @@ html,body{
   color:#7a4f00;
   font-size:12px;
   display:none;
-
 }
 
-
-/* =========================
-    MOBILE RESPONSIVE + COLLAPSE DETAILS
-========================== */
-
-@media screen and (max-width: 768px){
-
-  .control-box{
-
-    width:180px;
-    padding:8px;
-    bottom:10px;
-    right:10px;
-    font-size:11px;
-
-  }
-
-  .control-box b{
-
-    font-size:12px;
-
-  }
-
-  .control-box select,
-  .control-box button{
-
-    padding:5px;
-    margin-top:5px;
-    font-size:11px;
-
-  }
-
-  .route-info{
-
-    font-size:10px;
-    max-height:90px;
-    padding:6px;
-
-  }
-
-  .off-route-warning{
-
-    font-size:10px;
-    padding:6px;
-
-  }
-
-  #routeDetailsBox{
-
-    display:none;
-
-  }
-
+.arrival-warning{
+  position:absolute;
+  top:50%;
+  left:50%;
+  transform:translate(-50%,-50%);
+  background:#0f9d58;
+  color:white;
+  padding:18px 25px;
+  border-radius:14px;
+  z-index:2000;
+  font-size:18px;
+  box-shadow:0 0 20px rgba(0,0,0,.4);
+  display:none;
 }
 
-@media screen and (max-width: 480px){
-
-  .control-box{
-
-    width:155px;
-    padding:6px;
-    bottom:8px;
-    right:8px;
-
-  }
-
-  .control-box select,
-  .control-box button{
-
-    font-size:10px;
-    padding:4px;
-
-  }
-
-  .route-info{
-
-    font-size:9px;
-    max-height:70px;
-
-  }
-
+.legend{
+  background:white;
+  padding:10px;
+  border-radius:10px;
+  box-shadow:0 0 10px rgba(0,0,0,0.3);
+  line-height:22px;
+  font-size:13px;
 }
 
-/* =========================
-    CUSTOM MAP SYMBOLS
-========================== */
+.popup-table{border-collapse:collapse;width:100%;}
+.popup-table td{border-bottom:1px solid #ddd;padding:4px;font-size:12px;}
+.popup-title{font-weight:bold;margin-bottom:6px;}
+
+.user-arrow{
+  font-size:28px;
+  color:#007bff;
+  width:30px;
+  height:30px;
+  line-height:30px;
+  text-align:center;
+  transform-origin:center center;
+}
+
+.nav-active-button{
+  background:#007bff !important;
+  color:white;
+  font-weight:bold;
+}
 
 .hospital-icon{
-
   background:#e53935;
   color:white;
   border:2px solid white;
@@ -305,59 +135,16 @@ html,body{
   font-weight:bold;
   font-size:16px;
   box-shadow:0 0 6px rgba(0,0,0,0.45);
-
 }
 
-.legend-title{
-
-  font-weight:bold;
-  margin-bottom:8px;
-  font-size:14px;
-
-}
-
-.legend-item{
-
-  display:flex;
-  align-items:center;
-  gap:7px;
-  margin-bottom:6px;
-
-}
-
-.legend-symbol{
-
-  width:18px;
-  height:14px;
-  display:inline-block;
-  border-radius:2px;
-
-}
-
-.legend-line{
-
-  width:24px;
-  height:0;
-  display:inline-block;
-  border-top:4px solid #777777;
-
-}
-
+.legend-item{display:flex;align-items:center;gap:7px;margin-bottom:6px;}
+.legend-symbol{width:18px;height:14px;display:inline-block;border-radius:2px;}
+.legend-line{width:24px;height:0;display:inline-block;border-top:4px solid #777;}
 .legend-hospital{
-
-  width:20px;
-  height:20px;
-  line-height:20px;
-  text-align:center;
-  border-radius:50%;
-  background:#e53935;
-  color:white;
-  border:1px solid white;
-  font-weight:bold;
-  display:inline-block;
-
+  width:20px;height:20px;line-height:20px;text-align:center;
+  border-radius:50%;background:#e53935;color:white;border:1px solid white;
+  font-weight:bold;display:inline-block;
 }
-
 </style>
 </head>
 
@@ -365,57 +152,44 @@ html,body{
 
 <div id="map"></div>
 
-<!-- =========================
-     CONTROL BOX
-========================= -->
+<div class="dashboard">
+  <b>لوحة التحكم الإحصائية</b>
+  <hr>
+  عدد المستشفيات: <span id="hospitalCount">0</span><br>
+  عدد الشوارع: <span id="roadCount">0</span><br>
+  عدد الأحياء: <span id="livingCount">0</span><br>
+
+  <div id="topHospitals" class="top-hospitals">
+    <b>أفضل 3 مستشفيات</b><br>
+    حدد موقعك أولاً.
+  </div>
+</div>
+
+<div id="arrivalWarning" class="arrival-warning">
+  ✅ لقد وصلت إلى وجهتك
+</div>
 
 <div class="control-box">
 
   <b>البحث عن المستشفيات</b>
 
   <select id="hospitalType">
-
-    <option value="all">
-      جميع المستشفيات
-    </option>
-
-    <option value="government">
-      حكومي
-    </option>
-
-    <option value="private">
-      خاص
-    </option>
-
+    <option value="all">جميع المستشفيات</option>
+    <option value="government">حكومي</option>
+    <option value="private">خاص</option>
   </select>
 
   <select id="hospitalSelect">
-
-    <option value="">
-      اختر مستشفى
-    </option>
-
+    <option value="">اختر مستشفى</option>
   </select>
 
-  <button onclick="findNearestHospital()">
-    أقرب مستشفى
-  </button>
+  <button onclick="findNearestHospital()">أقرب مستشفى</button>
+  <button onclick="showTop3Hospitals()">أفضل 3 مستشفيات</button>
+  <button onclick="goToSelectedHospital()">الانتقال للمستشفى المحدد</button>
+  <button onclick="goToSelectedHospitalViaNearestRoad()">الانتقال عبر أقرب شارع للمستشفى</button>
 
-  <button onclick="goToSelectedHospital()">
-    الانتقال للمستشفى المحدد
-  </button>
-
-  <button onclick="goToSelectedHospitalViaNearestRoad()">
-    الانتقال عبر أقرب شارع للمستشفى
-  </button>
-
-  <button id="navigationModeBtn" onclick="toggleNavigationMode()">
-    تشغيل وضع الملاحة
-  </button>
-
-  <button id="centerLocationBtn" onclick="centerOnMyLocation()">
-    إعادة التمركز على موقعي
-  </button>
+  <button id="navigationModeBtn" onclick="toggleNavigationMode()">تشغيل وضع الملاحة</button>
+  <button onclick="centerOnMyLocation()">إعادة التمركز على موقعي</button>
 
   <select id="travelMode" onchange="changeTravelMode()">
     <option value="car">سيارة</option>
@@ -423,701 +197,248 @@ html,body{
     <option value="bike">دراجة</option>
   </select>
 
-  <button id="voiceNavigationBtn" onclick="toggleVoiceNavigation()">
-    إيقاف الملاحة الصوتية
-  </button>
+  <div class="route-info">
+    <b>السرعة الحالية</b><br>
+    <span id="speedValue">0 كم/ساعة</span>
+  </div>
 
-  <button id="toggleDetailsBtn" onclick="toggleRouteDetails()">
-    عرض / إخفاء تفاصيل الملاحة
-  </button>
+  <div id="offRouteWarning" class="off-route-warning">
+    لقد خرجت عن المسار، جارٍ إعادة التوجيه...
+  </div>
 
-  <div id="routeDetailsBox">
-
-    <div class="route-info">
-      <b>السرعة الحالية</b><br>
-      <span id="speedValue">0 كم/ساعة</span>
-    </div>
-
-    <div id="offRouteWarning" class="off-route-warning">
-      لقد خرجت عن المسار، جارٍ إعادة التوجيه...
-    </div>
-
-    <div id="routeInfo" class="route-info">
-      <b>معلومات المسار</b><br>
-      اختر مستشفى لعرض المسافة والوقت والتعليمات.
-    </div>
-
+  <div id="routeInfo" class="route-info">
+    <b>معلومات المسار</b><br>
+    اختر مستشفى لعرض المسافة والوقت والتعليمات.
   </div>
 
 </div>
 
-<!-- LEAFLET -->
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-
-<!-- ROUTING -->
 <script src="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.js"></script>
-
-<!-- ROUTE ARROWS -->
 <script src="https://unpkg.com/leaflet-polylinedecorator@1.6.0/dist/leaflet.polylineDecorator.js"></script>
 
 <script>
-
-
-function toggleRouteDetails(){
-
-  let box =
-  document.getElementById("routeDetailsBox");
-
-  if(!box){
-    return;
-  }
-
-  if(box.style.display === "none" || getComputedStyle(box).display === "none"){
-
-    box.style.display = "block";
-
-  }
-
-  else{
-
-    box.style.display = "none";
-
-  }
-
-}
-
-/* =========================
-    MAP
-========================== */
-
 var map = L.map("map").setView([31.9038,35.2034],11);
 
-/* =========================
-    MAP PANES ORDER
-    boundaryPane: حدود المحافظة
-    livingPane: الأحياء في الأسفل
-    roadsPane: شبكة الطرق الرمادية فوق الأحياء
-    routePane: خط المسار الأزرق فوق كل الطبقات المضلعة
-    healthPane: المستشفيات فوق المسار والطبقات
-========================== */
-
-map.createPane("boundaryPane");
-map.getPane("boundaryPane").style.zIndex = 300;
-
-map.createPane("livingPane");
-map.getPane("livingPane").style.zIndex = 400;
-
-map.createPane("roadsPane");
-map.getPane("roadsPane").style.zIndex = 650;
-
-map.createPane("routePane");
-map.getPane("routePane").style.zIndex = 1200;
+map.createPane("boundaryPane"); map.getPane("boundaryPane").style.zIndex = 300;
+map.createPane("livingPane"); map.getPane("livingPane").style.zIndex = 400;
+map.createPane("roadsPane"); map.getPane("roadsPane").style.zIndex = 650;
+map.createPane("routePane"); map.getPane("routePane").style.zIndex = 1200;
 map.getPane("routePane").style.pointerEvents = "none";
+map.createPane("healthPane"); map.getPane("healthPane").style.zIndex = 1300;
 
-map.createPane("healthPane");
-map.getPane("healthPane").style.zIndex = 1300;
-map.getPane("healthPane").style.pointerEvents = "auto";
-
-/* =========================
-    BASEMAPS
-========================== */
-
-var lightMap = L.tileLayer(
-"https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
-{
-  attribution:"© OpenStreetMap"
-}
-).addTo(map);
-
-var darkMap = L.tileLayer(
-"https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",
-{
-  attribution:"© CARTO"
-}
-);
-
-/* =========================
-    VARIABLES
-========================== */
+var lightMap = L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{attribution:"© OpenStreetMap"}).addTo(map);
+var darkMap = L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",{attribution:"© CARTO"});
 
 let hospitals = [];
 let userLocation = null;
-let routingControl = null;
-
 let userMarker = null;
 let lastLocation = null;
+let routingControl = null;
 let activeTarget = null;
+let activeHospital = null;
 let routeDecorator = null;
 let routeLine = null;
-let nearestRoadPointMarker = null;
 let roadFeatures = [];
+let nearestRoadPointMarker = null;
 let lastRouteUpdateLocation = null;
 let currentRouteCoordinates = [];
 let isNavigationMode = false;
-let currentBearing = 0;
-let lastOffRouteAlertTime = 0;
 let currentTravelMode = "car";
-let voiceNavigation = true;
-let lastSpokenInstruction = "";
+let arrivalShown = false;
 
 const rerouteDistanceMeters = 20;
-const offRouteDistanceMeters = 50;
-const offRouteAlertDelay = 8000;
-
-/* =========================
-    LOGICAL TRAVEL SPEEDS
-    car: داخل المدينة
-    foot: مشي
-    bike: دراجة
-========================== */
+const arrivalDistanceMeters = 100;
 
 const modeSpeeds = {
-  car: 35,
-  foot: 5,
-  bike: 15
+  car:35,
+  foot:5,
+  bike:15
 };
 
-/* =========================
-    USER LOCATION + LIVE TRACKING + DIRECTION
-========================== */
-
-function calculateBearing(lat1, lon1, lat2, lon2){
-
-  lat1 = lat1 * Math.PI / 180;
-  lat2 = lat2 * Math.PI / 180;
-
-  let dLon =
-  (lon2 - lon1) * Math.PI / 180;
-
-  let y =
-  Math.sin(dLon) * Math.cos(lat2);
-
-  let x =
-  Math.cos(lat1) * Math.sin(lat2) -
-  Math.sin(lat1) * Math.cos(lat2) * Math.cos(dLon);
-
-  let bearing =
-  Math.atan2(y, x) * 180 / Math.PI;
-
-  return (bearing + 360) % 360;
-
+function distance(lat1,lon1,lat2,lon2){
+  const R = 6371;
+  const dLat = (lat2-lat1)*Math.PI/180;
+  const dLon = (lon2-lon1)*Math.PI/180;
+  const a =
+    Math.sin(dLat/2)*Math.sin(dLat/2)+
+    Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*
+    Math.sin(dLon/2)*Math.sin(dLon/2);
+  const c = 2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
+  return R*c;
 }
 
-function toggleNavigationMode(){
-
-  isNavigationMode = !isNavigationMode;
-
-  let btn = document.getElementById("navigationModeBtn");
-
-  if(isNavigationMode){
-
-    btn.innerText = "إيقاف وضع الملاحة";
-    btn.classList.add("nav-active-button");
-
-    if(userLocation){
-      map.setView(userLocation, Math.max(map.getZoom(), 17));
-    }
-
-  }
-
-  else{
-
-    btn.innerText = "تشغيل وضع الملاحة";
-    btn.classList.remove("nav-active-button");
-    resetMapRotation();
-
-  }
-
-}
-
-function centerOnMyLocation(){
-
-  if(!userLocation){
-
-    alert("لم يتم تحديد موقعك بعد");
-    return;
-
-  }
-
-  map.setView(userLocation, 17, {
-    animate:true
-  });
-
-}
-
-function changeTravelMode(){
-
-  currentTravelMode =
-  document.getElementById("travelMode").value;
-
-  if(routingControl && activeTarget && userLocation){
-
-    let fakeHospital = {
-      geometry:{
-        coordinates:[
-          activeTarget[1],
-          activeTarget[0]
-        ]
-      }
-    };
-
-    drawRoute(fakeHospital);
-
-  }
-
-}
-
-function updateSpeed(pos){
-
-  let speedElement =
-  document.getElementById("speedValue");
-
-  if(!speedElement){
-    return;
-  }
-
-  let speed = pos.coords.speed;
-
-  if(speed === null || speed === undefined){
-
-    speedElement.innerHTML = "غير متوفرة";
-    return;
-
-  }
-
-  let speedKmh =
-  speed * 3.6;
-
-  speedElement.innerHTML =
-  speedKmh.toFixed(1) + " كم/ساعة";
-
-}
-
-function applyNavigationMode(angle){
-
-  if(!isNavigationMode || !userLocation){
-    return;
-  }
-
-  map.setView(userLocation, Math.max(map.getZoom(), 17), {
-    animate:true
-  });
-
-  rotateMap(-angle);
-
-}
-
-function rotateMap(angle){
-
-  let pane = map.getPane("mapPane");
-
-  if(pane){
-    pane.style.transform += ` rotate(${angle}deg)`;
-    pane.style.transformOrigin = "50% 50%";
-  }
-
-}
-
-function resetMapRotation(){
-
-  let pane = map.getPane("mapPane");
-
-  if(pane){
-    pane.style.transform = pane.style.transform.replace(/ rotate\([^)]*\)/g, "");
-  }
-
-}
-
-function distanceToRouteMeters(point, routeCoordinates){
-
-  if(!routeCoordinates || routeCoordinates.length < 2){
-    return Infinity;
-  }
-
-  let minDistance = Infinity;
-  let latScale = 111320;
-  let lonScale = 111320 * Math.cos(point[0] * Math.PI / 180);
-
-  let px = point[1] * lonScale;
-  let py = point[0] * latScale;
-
-  for(let i = 0; i < routeCoordinates.length - 1; i++){
-
-    let a = routeCoordinates[i];
-    let b = routeCoordinates[i + 1];
-
-    let ax = a.lng * lonScale;
-    let ay = a.lat * latScale;
-    let bx = b.lng * lonScale;
-    let by = b.lat * latScale;
-
-    let dx = bx - ax;
-    let dy = by - ay;
-
-    let t = 0;
-
-    if(dx !== 0 || dy !== 0){
-      t = ((px - ax) * dx + (py - ay) * dy) / (dx * dx + dy * dy);
-      t = Math.max(0, Math.min(1, t));
-    }
-
-    let closestX = ax + t * dx;
-    let closestY = ay + t * dy;
-
-    let d = Math.sqrt(
-      Math.pow(px - closestX, 2) +
-      Math.pow(py - closestY, 2)
-    );
-
-    if(d < minDistance){
-      minDistance = d;
-    }
-
-  }
-
-  return minDistance;
-
-}
-
-function showOffRouteWarning(){
-
-  let warning = document.getElementById("offRouteWarning");
-
-  if(warning){
-    warning.style.display = "block";
-  }
-
-  setTimeout(function(){
-
-    if(warning){
-      warning.style.display = "none";
-    }
-
-  }, 5000);
-
-}
-
-function checkOffRoute(){
-
-  if(!routingControl || !activeTarget || currentRouteCoordinates.length < 2){
-    return;
-  }
-
-  let distanceFromRoute = distanceToRouteMeters(userLocation, currentRouteCoordinates);
-  let now = Date.now();
-
-  if(
-    distanceFromRoute > offRouteDistanceMeters &&
-    now - lastOffRouteAlertTime > offRouteAlertDelay
-  ){
-
-    lastOffRouteAlertTime = now;
-    showOffRouteWarning();
-
-    routingControl.setWaypoints([
-      L.latLng(userLocation),
-      L.latLng(activeTarget)
-    ]);
-
-    lastRouteUpdateLocation = [...userLocation];
-
-  }
-
+function calculateBearing(lat1,lon1,lat2,lon2){
+  lat1 = lat1*Math.PI/180;
+  lat2 = lat2*Math.PI/180;
+  let dLon = (lon2-lon1)*Math.PI/180;
+  let y = Math.sin(dLon)*Math.cos(lat2);
+  let x = Math.cos(lat1)*Math.sin(lat2)-Math.sin(lat1)*Math.cos(lat2)*Math.cos(dLon);
+  return (Math.atan2(y,x)*180/Math.PI+360)%360;
 }
 
 const arrowIcon = L.divIcon({
-
   className:"",
   html:`<div id="userArrow" class="user-arrow">➤</div>`,
   iconSize:[30,30],
   iconAnchor:[15,15]
-
 });
 
 function updateUserMarker(newLocation){
-
   let angle = 0;
 
   if(lastLocation){
-
-    angle = calculateBearing(
-
-      lastLocation[0],
-      lastLocation[1],
-      newLocation[0],
-      newLocation[1]
-
-    );
-
-    currentBearing = angle;
-
+    angle = calculateBearing(lastLocation[0],lastLocation[1],newLocation[0],newLocation[1]);
   }
 
   if(!userMarker){
-
-    userMarker = L.marker(newLocation,{
-
-      icon:arrowIcon
-
-    })
-    .addTo(map)
-    .bindPopup("موقعك الحالي");
-
-  }
-
-  else{
-
+    userMarker = L.marker(newLocation,{icon:arrowIcon}).addTo(map).bindPopup("موقعك الحالي");
+  }else{
     userMarker.setLatLng(newLocation);
-
   }
 
-  let arrow =
-  document.getElementById("userArrow");
-
+  let arrow = document.getElementById("userArrow");
   if(arrow){
-
-    arrow.style.transform =
-    `rotate(${angle}deg)`;
-
+    arrow.style.transform = `rotate(${angle}deg)`;
   }
 
-  applyNavigationMode(currentBearing);
+  if(isNavigationMode){
+    map.setView(newLocation,17,{animate:true});
+  }
 
   lastLocation = newLocation;
-
 }
 
-function checkAutoReroute(){
+function updateSpeed(pos){
+  let speedElement = document.getElementById("speedValue");
+  let speed = pos.coords.speed;
 
-  if(!routingControl || !activeTarget || !lastRouteUpdateLocation){
+  if(speed === null || speed === undefined){
+    speedElement.innerHTML = "غير متوفرة";
     return;
   }
 
-  let movedMeters = distance(
+  speedElement.innerHTML = (speed*3.6).toFixed(1) + " كم/ساعة";
+}
 
+function checkArrival(){
+  if(!activeTarget || !userLocation || arrivalShown) return;
+
+  let d = distance(userLocation[0],userLocation[1],activeTarget[0],activeTarget[1]) * 1000;
+
+  if(d <= arrivalDistanceMeters){
+    arrivalShown = true;
+    let box = document.getElementById("arrivalWarning");
+    box.style.display = "block";
+
+    setTimeout(function(){
+      box.style.display = "none";
+    },5000);
+  }
+}
+
+function checkAutoReroute(){
+  if(!routingControl || !activeTarget || !lastRouteUpdateLocation) return;
+
+  let movedMeters = distance(
     lastRouteUpdateLocation[0],
     lastRouteUpdateLocation[1],
     userLocation[0],
     userLocation[1]
-
   ) * 1000;
 
   if(movedMeters >= rerouteDistanceMeters){
-
     routingControl.setWaypoints([
-
       L.latLng(userLocation),
       L.latLng(activeTarget)
-
     ]);
 
     lastRouteUpdateLocation = [...userLocation];
-
   }
-
 }
 
 navigator.geolocation.watchPosition(function(pos){
-
-  userLocation = [
-
-    pos.coords.latitude,
-    pos.coords.longitude
-
-  ];
+  userLocation = [pos.coords.latitude,pos.coords.longitude];
 
   updateUserMarker(userLocation);
   updateSpeed(pos);
   checkAutoReroute();
-  checkOffRoute();
+  checkArrival();
 
-}, function(){
-
+},function(){
   alert("لم يتم السماح بتحديد الموقع");
-
-}, {
-
+},{
   enableHighAccuracy:true,
   maximumAge:0,
   timeout:10000
-
 });
 
-/* =========================
-    POPUP
-========================== */
-
-function popupAttributes(feature, layer){
-
+function popupAttributes(feature,layer){
   if(!feature.properties) return;
 
-  let html = `
-    <div class="popup-title">
-      Attributes
-    </div>
-
-    <table class="popup-table">
-  `;
+  let html = `<div class="popup-title">Attributes</div><table class="popup-table">`;
 
   for(let key in feature.properties){
-
-    html += `
-      <tr>
-        <td><b>${key}</b></td>
-        <td>${feature.properties[key]}</td>
-      </tr>
-    `;
-
+    html += `<tr><td><b>${key}</b></td><td>${feature.properties[key]}</td></tr>`;
   }
 
   html += `</table>`;
-
   layer.bindPopup(html);
-
 }
 
-/* =========================
-    LOAD DATA
-========================== */
-
 Promise.all([
-
-  fetch("Ramallah_Boundary.json")
-  .then(r=>r.json()),
-
-  fetch("Road_Network.json")
-  .then(r=>r.json()),
-
-  fetch("Living.json")
-  .then(r=>r.json()),
-
-  fetch("Health_Services.json")
-  .then(r=>r.json())
-
+  fetch("Ramallah_Boundary.json").then(r=>r.json()),
+  fetch("Road_Network.json").then(r=>r.json()),
+  fetch("Living.json").then(r=>r.json()),
+  fetch("Health_Services.json").then(r=>r.json())
 ]).then(initLayers);
 
-/* =========================
-    INIT LAYERS
-========================== */
-
 function initLayers(data){
-
-  let [
-
-    boundary,
-    roads,
-    living,
-    health
-
-  ] = data;
-
+  let [boundary,roads,living,health] = data;
   roadFeatures = roads.features || [];
 
-  /* =========================
-      BOUNDARY
-  ========================== */
+  document.getElementById("hospitalCount").innerHTML = health.features.length;
+  document.getElementById("roadCount").innerHTML = roads.features.length;
+  document.getElementById("livingCount").innerHTML = living.features.length;
 
   var boundaryLayer = L.geoJSON(boundary,{
-
     pane:"boundaryPane",
-
-    style:{
-
-      color:"#000000",
-      weight:3,
-      fillOpacity:0
-
-    },
-
+    style:{color:"#000",weight:3,fillOpacity:0},
     onEachFeature:popupAttributes
-
   }).addTo(map);
-
-  /* =========================
-      ROADS
-  ========================== */
 
   var roadsLayer = L.geoJSON(roads,{
-
     pane:"roadsPane",
-
     style:function(feature){
-
-      let roadType =
-      feature.properties.type;
-
-      if(
-        roadType === "Regional" ||
-        roadType === "اقليمي"
-      ){
-
-        return{
-
-          color:"#555555",
-          weight:4,
-          opacity:0.9
-
-        };
-
+      let roadType = feature.properties.type;
+      if(roadType === "Regional" || roadType === "اقليمي"){
+        return {color:"#555",weight:4,opacity:.9};
       }
-
-      else{
-
-        return{
-
-          color:"#888888",
-          weight:2,
-          opacity:0.8
-
-        };
-
-      }
-
+      return {color:"#888",weight:2,opacity:.8};
     },
-
     onEachFeature:popupAttributes
-
   }).addTo(map);
-
-  /* =========================
-      LIVING
-  ========================== */
 
   var livingLayer = L.geoJSON(living,{
-
     pane:"livingPane",
-
     style:{
-
-      color:"#000000",
+      color:"#000",
       weight:1.5,
       fillColor:"#f3e2c7",
-      fillOpacity:0.65
-
+      fillOpacity:.65
     },
-
     onEachFeature:popupAttributes
-
   }).addTo(map);
 
-  /* =========================
-      HEALTH
-  ========================== */
-
   var healthLayer = L.geoJSON(health,{
-
     pane:"healthPane",
-
     pointToLayer:function(feature,latlng){
-
       let hospitalIcon = L.divIcon({
-
         className:"hospital-icon",
         html:"H",
         iconSize:[26,26],
         iconAnchor:[13,13],
         popupAnchor:[0,-13]
-
       });
 
       return L.marker(latlng,{
@@ -1125,144 +446,49 @@ function initLayers(data){
         icon:hospitalIcon,
         zIndexOffset:10000
       });
-
     },
-
     onEachFeature:function(feature,layer){
-
       popupAttributes(feature,layer);
 
       hospitals.push(feature);
 
-      let name =
-      feature.properties.BUSNIESS_NAME_A;
-
-      let option =
-      document.createElement("option");
-
+      let name = feature.properties.BUSNIESS_NAME_A;
+      let option = document.createElement("option");
       option.value = name;
       option.text = name;
-
-      document
-      .getElementById("hospitalSelect")
-      .appendChild(option);
-
+      document.getElementById("hospitalSelect").appendChild(option);
     }
-
   }).addTo(map);
 
-  /* =========================
-      FIT BOUNDS
-  ========================== */
-
-  map.fitBounds(
-    boundaryLayer.getBounds()
-  );
-
-  /* =========================
-      LAYER CONTROL
-  ========================== */
+  map.fitBounds(boundaryLayer.getBounds());
 
   var baseMaps = {
-
     "Light Mode":lightMap,
     "Dark Mode":darkMap
-
   };
 
   var overlayMaps = {
-
-    "Ramallah Boundary":
-    boundaryLayer,
-
-    "Road Network":
-    roadsLayer,
-
-    "Living Areas":
-    livingLayer,
-
-    "Health Services":
-    healthLayer
-
+    "Ramallah Boundary":boundaryLayer,
+    "Road Network":roadsLayer,
+    "Living Areas":livingLayer,
+    "Health Services":healthLayer
   };
 
-  // سيتم إضافة بوكس التحكم بالطبقات بعد الليجند
-  // حتى يظهر فوقه في الجهة اليسرى السفلية
-
-  // ترتيب الطبقات بعد تشغيل/إطفاء أي لاير
-  function keepLayerOrder(){
-
-    if(boundaryLayer && boundaryLayer.bringToBack){
-      boundaryLayer.bringToBack();
-    }
-
-    if(livingLayer && livingLayer.bringToBack){
-      livingLayer.bringToBack();
-    }
-
-    if(roadsLayer && roadsLayer.bringToFront){
-      roadsLayer.bringToFront();
-    }
-
-    if(healthLayer){
-
-      healthLayer.eachLayer(function(layer){
-
-        if(layer.setZIndexOffset){
-          layer.setZIndexOffset(10000);
-        }
-
-        if(layer.bringToFront){
-          layer.bringToFront();
-        }
-
-      });
-
-      if(healthLayer.bringToFront){
-        healthLayer.bringToFront();
-      }
-
-    }
-
-  }
-
-  map.on("overlayadd", function(){
-
-    setTimeout(keepLayerOrder, 100);
-
-  });
-
-  map.on("zoomend moveend", function(){
-
-    setTimeout(keepLayerOrder, 100);
-
-  });
-
-  setTimeout(keepLayerOrder, 500);
-
-  /* =========================
-      LEGEND
-  ========================== */
-
-  var legend =
-  L.control({
+  L.control.layers(baseMaps,overlayMaps,{
+    collapsed:false,
     position:"bottomleft"
-  });
+  }).addTo(map);
+
+  var legend = L.control({position:"bottomleft"});
 
   legend.onAdd = function(){
-
-    var div =
-    L.DomUtil.create(
-      "div",
-      "legend"
-    );
+    var div = L.DomUtil.create("div","legend");
 
     div.innerHTML = `
-
-      <div class="legend-title">Legend</div>
+      <b>Legend</b><br><br>
 
       <div class="legend-item">
-        <span class="legend-symbol" style="background:#f3e2c7; border:1.5px solid #000000;"></span>
+        <span class="legend-symbol" style="background:#f3e2c7;border:1.5px solid #000;"></span>
         <span>Living Areas</span>
       </div>
 
@@ -1272,7 +498,7 @@ function initLayers(data){
       </div>
 
       <div class="legend-item">
-        <span class="legend-symbol" style="background:transparent; border:2px solid #000000;"></span>
+        <span class="legend-symbol" style="background:transparent;border:2px solid #000;"></span>
         <span>Ramallah Boundary</span>
       </div>
 
@@ -1280,315 +506,175 @@ function initLayers(data){
         <span class="legend-hospital">H</span>
         <span>Health Services</span>
       </div>
-
     `;
 
     return div;
-
   };
 
   legend.addTo(map);
-
-  /* =========================
-      LAYER CONTROL ABOVE LEGEND
-  ========================== */
-
-  L.control.layers(
-
-    baseMaps,
-    overlayMaps,
-
-    {
-      collapsed:false,
-      position:"bottomleft"
-    }
-
-  ).addTo(map);
-
 }
 
-/* =========================
-    HOSPITAL TYPE
-========================== */
-
 function getHospitalType(name){
-
-  const government = [
-
-    "مجمع فلسطين الطبي"
-
-  ];
+  const government = ["مجمع فلسطين الطبي"];
 
   const privateHospitals = [
-
     "المستشفى الاستشاري العربي",
     "مستشفى الرعاية التخصصي",
     "مستشفى دكتور ضرغام",
     "مستشفى الناظر للولادة"
-
   ];
 
-  if(government.includes(name))
-    return "government";
-
-  if(privateHospitals.includes(name))
-    return "private";
+  if(government.includes(name)) return "government";
+  if(privateHospitals.includes(name)) return "private";
 
   return "private";
-
 }
 
-/* =========================
-    DISTANCE
-========================== */
+function getFilteredHospitals(){
+  const selected = document.getElementById("hospitalType").value;
 
-function distance(lat1,lon1,lat2,lon2){
+  return hospitals.filter(h=>{
+    const name = h.properties.BUSNIESS_NAME_A;
+    const type = getHospitalType(name);
 
-  const R = 6371;
-
-  const dLat =
-  (lat2-lat1) *
-  Math.PI/180;
-
-  const dLon =
-  (lon2-lon1) *
-  Math.PI/180;
-
-  const a =
-
-  Math.sin(dLat/2) *
-  Math.sin(dLat/2)
-
-  +
-
-  Math.cos(lat1*Math.PI/180) *
-  Math.cos(lat2*Math.PI/180) *
-
-  Math.sin(dLon/2) *
-  Math.sin(dLon/2);
-
-  const c =
-
-  2 * Math.atan2(
-    Math.sqrt(a),
-    Math.sqrt(1-a)
-  );
-
-  return R*c;
-
+    if(selected !== "all" && type !== selected) return false;
+    return true;
+  });
 }
 
-/* =========================
-    FIND NEAREST
-========================== */
+function calculateHospitalsByDistance(){
+  if(!userLocation) return [];
 
-function findNearestHospital(){
+  return getFilteredHospitals().map(h=>{
+    const lat = h.geometry.coordinates[1];
+    const lon = h.geometry.coordinates[0];
+    const d = distance(userLocation[0],userLocation[1],lat,lon);
 
+    return {
+      feature:h,
+      name:h.properties.BUSNIESS_NAME_A,
+      distanceKm:d
+    };
+  }).sort((a,b)=>a.distanceKm-b.distanceKm);
+}
+
+function showTop3Hospitals(){
   if(!userLocation){
-
     alert("لم يتم تحديد موقعك");
     return;
-
   }
 
-  const selected =
-  document.getElementById("hospitalType").value;
+  let list = calculateHospitalsByDistance().slice(0,3);
 
-  let nearest = null;
+  let html = `<b>أفضل 3 مستشفيات</b><br>`;
 
-  let minDistance = Infinity;
+  list.forEach((item,index)=>{
+    let speed = modeSpeeds[currentTravelMode] || 35;
+    let timeMin = Math.round((item.distanceKm / speed) * 60);
 
-  hospitals.forEach(h=>{
-
-    const name =
-    h.properties.BUSNIESS_NAME_A;
-
-    const type =
-    getHospitalType(name);
-
-    if(
-      selected !== "all" &&
-      type !== selected
-    )
-    return;
-
-    const lat =
-    h.geometry.coordinates[1];
-
-    const lon =
-    h.geometry.coordinates[0];
-
-    const d = distance(
-
-      userLocation[0],
-      userLocation[1],
-      lat,
-      lon
-
-    );
-
-    if(d < minDistance){
-
-      minDistance = d;
-      nearest = h;
-
-    }
-
+    html += `
+      <div style="margin-top:6px;cursor:pointer;"
+      onclick="drawRouteByHospitalName('${item.name.replace(/'/g,"\\'")}')">
+        ${index+1}. ${item.name}<br>
+        ${item.distanceKm.toFixed(2)} كم - ${timeMin} دقيقة
+      </div>
+    `;
   });
 
-  if(!nearest){
-
-    alert("لا يوجد مستشفى");
-    return;
-
-  }
-
-  drawRoute(nearest);
-
+  document.getElementById("topHospitals").innerHTML = html;
 }
 
-/* =========================
-    SELECTED HOSPITAL
-========================== */
+function drawRouteByHospitalName(name){
+  let hospital = hospitals.find(h=>h.properties.BUSNIESS_NAME_A === name);
+  if(hospital) drawRoute(hospital);
+}
 
-function goToSelectedHospital(){
-
-  const selectedHospital =
-  document.getElementById("hospitalSelect").value;
-
-  if(selectedHospital === ""){
-
-    alert("اختر مستشفى");
+function findNearestHospital(){
+  if(!userLocation){
+    alert("لم يتم تحديد موقعك");
     return;
-
   }
 
-  let targetHospital = null;
+  let nearest = calculateHospitalsByDistance()[0];
 
-  hospitals.forEach(h=>{
+  if(!nearest){
+    alert("لا يوجد مستشفى");
+    return;
+  }
 
-    if(
+  drawRoute(nearest.feature);
+  showTop3Hospitals();
+}
 
-      h.properties.BUSNIESS_NAME_A
-      ===
-      selectedHospital
+function goToSelectedHospital(){
+  const selectedHospital = document.getElementById("hospitalSelect").value;
 
-    ){
+  if(selectedHospital === ""){
+    alert("اختر مستشفى");
+    return;
+  }
 
-      targetHospital = h;
-
-    }
-
-  });
+  let targetHospital = hospitals.find(h=>h.properties.BUSNIESS_NAME_A === selectedHospital);
 
   if(!targetHospital){
-
     alert("المستشفى غير موجود");
     return;
-
   }
 
   drawRoute(targetHospital);
-
 }
 
-
-/* =========================
-    SELECTED HOSPITAL VIA NEAREST ROAD
-========================== */
-
 function getSelectedHospitalFeature(){
-
-  const selectedHospital =
-  document.getElementById("hospitalSelect").value;
+  const selectedHospital = document.getElementById("hospitalSelect").value;
 
   if(selectedHospital === ""){
-
     alert("اختر مستشفى");
     return null;
-
   }
 
-  let targetHospital = null;
-
-  hospitals.forEach(h=>{
-
-    if(
-      h.properties.BUSNIESS_NAME_A
-      ===
-      selectedHospital
-    ){
-
-      targetHospital = h;
-
-    }
-
-  });
+  let targetHospital = hospitals.find(h=>h.properties.BUSNIESS_NAME_A === selectedHospital);
 
   if(!targetHospital){
-
     alert("المستشفى غير موجود");
     return null;
-
   }
 
   return targetHospital;
-
 }
 
-function closestPointOnSegment(pointLat, pointLon, aLat, aLon, bLat, bLon){
-
+function closestPointOnSegment(pointLat,pointLon,aLat,aLon,bLat,bLon){
   let latScale = 111320;
-  let lonScale = 111320 * Math.cos(pointLat * Math.PI / 180);
+  let lonScale = 111320 * Math.cos(pointLat*Math.PI/180);
 
   let px = pointLon * lonScale;
   let py = pointLat * latScale;
-
   let ax = aLon * lonScale;
   let ay = aLat * latScale;
-
   let bx = bLon * lonScale;
   let by = bLat * latScale;
 
-  let dx = bx - ax;
-  let dy = by - ay;
+  let dx = bx-ax;
+  let dy = by-ay;
 
   let t = 0;
 
   if(dx !== 0 || dy !== 0){
-
-    t =
-    ((px - ax) * dx + (py - ay) * dy) /
-    (dx * dx + dy * dy);
-
-    t = Math.max(0, Math.min(1, t));
-
+    t = ((px-ax)*dx + (py-ay)*dy)/(dx*dx + dy*dy);
+    t = Math.max(0,Math.min(1,t));
   }
 
-  let closestX = ax + t * dx;
-  let closestY = ay + t * dy;
-
-  let closestLon = closestX / lonScale;
-  let closestLat = closestY / latScale;
-
-  let d = Math.sqrt(
-    Math.pow(px - closestX, 2) +
-    Math.pow(py - closestY, 2)
-  );
+  let closestX = ax + t*dx;
+  let closestY = ay + t*dy;
 
   return {
-    lat:closestLat,
-    lon:closestLon,
-    distance:d
+    lat:closestY/latScale,
+    lon:closestX/lonScale,
+    distance:Math.sqrt(Math.pow(px-closestX,2)+Math.pow(py-closestY,2))
   };
-
 }
 
 function getRoadName(feature){
-
-  if(!feature || !feature.properties){
-    return "طريق غير معروف";
-  }
+  if(!feature || !feature.properties) return "طريق غير معروف";
 
   return (
     feature.properties.name ||
@@ -1599,63 +685,33 @@ function getRoadName(feature){
     feature.properties.highway ||
     "طريق غير معروف"
   );
-
 }
 
-function findNearestRoadPoint(lat, lon){
-
-  if(!roadFeatures || roadFeatures.length === 0){
-    return null;
-  }
-
+function findNearestRoadPoint(lat,lon){
   let nearest = null;
   let minDistance = Infinity;
 
   roadFeatures.forEach(feature=>{
+    if(!feature.geometry || !feature.geometry.coordinates) return;
 
-    if(!feature.geometry || !feature.geometry.coordinates){
-      return;
-    }
-
-    let geometryType = feature.geometry.type;
     let lines = [];
 
-    if(geometryType === "LineString"){
-
+    if(feature.geometry.type === "LineString"){
       lines = [feature.geometry.coordinates];
-
-    }
-
-    else if(geometryType === "MultiLineString"){
-
+    }else if(feature.geometry.type === "MultiLineString"){
       lines = feature.geometry.coordinates;
-
-    }
-
-    else{
-
+    }else{
       return;
-
     }
 
     lines.forEach(line=>{
-
-      for(let i = 0; i < line.length - 1; i++){
-
+      for(let i=0;i<line.length-1;i++){
         let a = line[i];
-        let b = line[i + 1];
+        let b = line[i+1];
 
-        let result = closestPointOnSegment(
-          lat,
-          lon,
-          a[1],
-          a[0],
-          b[1],
-          b[0]
-        );
+        let result = closestPointOnSegment(lat,lon,a[1],a[0],b[1],b[0]);
 
         if(result.distance < minDistance){
-
           minDistance = result.distance;
 
           nearest = {
@@ -1664,319 +720,139 @@ function findNearestRoadPoint(lat, lon){
             distance:result.distance,
             roadName:getRoadName(feature)
           };
-
         }
-
       }
-
     });
-
   });
 
   return nearest;
-
 }
 
 function showNearestRoadPoint(point){
-
   if(nearestRoadPointMarker){
-
     map.removeLayer(nearestRoadPointMarker);
-    nearestRoadPointMarker = null;
-
   }
 
-  nearestRoadPointMarker = L.circleMarker([point.lat, point.lon],{
-
+  nearestRoadPointMarker = L.circleMarker([point.lat,point.lon],{
     pane:"routePane",
     radius:7,
-    color:"#000000",
+    color:"#000",
     weight:2,
     fillColor:"#00bcd4",
     fillOpacity:1
-
-  }).addTo(map)
-  .bindPopup(
+  }).addTo(map).bindPopup(
     "أقرب نقطة على الشارع للمستشفى<br>" +
     "الشارع: " + point.roadName + "<br>" +
     "البعد عن المستشفى: " + Math.round(point.distance) + " متر"
   );
-
 }
 
 function goToSelectedHospitalViaNearestRoad(){
+  let targetHospital = getSelectedHospitalFeature();
 
-  let targetHospital =
-  getSelectedHospitalFeature();
+  if(!targetHospital) return;
 
-  if(!targetHospital){
-    return;
-  }
+  let hospitalLat = targetHospital.geometry.coordinates[1];
+  let hospitalLon = targetHospital.geometry.coordinates[0];
 
-  if(!roadFeatures || roadFeatures.length === 0){
-
-    alert("لم يتم تحميل طبقة الطرق بعد");
-    return;
-
-  }
-
-  let hospitalLat =
-  targetHospital.geometry.coordinates[1];
-
-  let hospitalLon =
-  targetHospital.geometry.coordinates[0];
-
-  let nearestRoadPoint =
-  findNearestRoadPoint(hospitalLat, hospitalLon);
+  let nearestRoadPoint = findNearestRoadPoint(hospitalLat,hospitalLon);
 
   if(!nearestRoadPoint){
-
     alert("لم يتم العثور على شارع قريب من المستشفى");
     return;
-
   }
 
   showNearestRoadPoint(nearestRoadPoint);
 
-  drawRoute(targetHospital, {
-    targetLatLng:[
-      nearestRoadPoint.lat,
-      nearestRoadPoint.lon
-    ],
+  drawRoute(targetHospital,{
+    targetLatLng:[nearestRoadPoint.lat,nearestRoadPoint.lon],
     routeNote:
-      "تم توجيه المسار إلى أقرب شارع للمستشفى<br>" +
-      "الشارع: " + nearestRoadPoint.roadName + "<br>" +
-      "بعد نقطة الوصول عن المستشفى: " +
-      Math.round(nearestRoadPoint.distance) + " متر"
+    "تم توجيه المسار إلى أقرب شارع للمستشفى<br>" +
+    "الشارع: " + nearestRoadPoint.roadName + "<br>" +
+    "بعد نقطة الوصول عن المستشفى: " + Math.round(nearestRoadPoint.distance) + " متر"
   });
-
 }
 
-
-/* =========================
-    ROUTE INFO + INSTRUCTIONS + ARROWS
-========================== */
-
 function formatDistance(meters){
-
-  if(meters >= 1000){
-    return (meters / 1000).toFixed(2) + " كم";
-  }
-
+  if(meters >= 1000) return (meters/1000).toFixed(2) + " كم";
   return Math.round(meters) + " متر";
-
 }
 
 function formatTime(seconds){
+  let minutes = Math.round(seconds/60);
 
-  let minutes = Math.round(seconds / 60);
+  if(minutes < 60) return minutes + " دقيقة";
 
-  if(minutes < 60){
-    return minutes + " دقيقة";
-  }
+  let hours = Math.floor(minutes/60);
+  let rem = minutes%60;
 
-  let hours = Math.floor(minutes / 60);
-  let remainingMinutes = minutes % 60;
-
-  return hours + " ساعة و " + remainingMinutes + " دقيقة";
-
+  return hours + " ساعة و " + rem + " دقيقة";
 }
 
+function updateRouteInfo(route,routeNote){
+  let routeInfo = document.getElementById("routeInfo");
 
-function toggleVoiceNavigation(){
+  let distanceText = formatDistance(route.summary.totalDistance);
 
-  voiceNavigation = !voiceNavigation;
-
-  let btn = document.getElementById("voiceNavigationBtn");
-
-  if(voiceNavigation){
-
-    if(btn){
-      btn.innerText = "إيقاف الملاحة الصوتية";
-      btn.classList.add("nav-active-button");
-    }
-
-  }
-
-  else{
-
-    if("speechSynthesis" in window){
-      speechSynthesis.cancel();
-    }
-
-    if(btn){
-      btn.innerText = "تشغيل الملاحة الصوتية";
-      btn.classList.remove("nav-active-button");
-    }
-
-  }
-
-}
-
-function speakInstruction(text){
-
-  if(!voiceNavigation){
-    return;
-  }
-
-  if(!("speechSynthesis" in window)){
-    return;
-  }
-
-  if(!text || text.trim() === ""){
-    return;
-  }
-
-  speechSynthesis.cancel();
-
-  let speech =
-  new SpeechSynthesisUtterance(text);
-
-  speech.lang = "ar-SA";
-  speech.rate = 1;
-  speech.pitch = 1;
-
-  speechSynthesis.speak(speech);
-
-}
-
-function speakFirstRouteInstruction(route){
-
-  if(
-    !route.instructions ||
-    route.instructions.length === 0
-  ){
-    return;
-  }
-
-  let firstInstruction =
-  route.instructions[0].text;
-
-  if(
-    firstInstruction &&
-    firstInstruction !== lastSpokenInstruction
-  ){
-
-    speakInstruction(firstInstruction);
-
-    lastSpokenInstruction =
-    firstInstruction;
-
-  }
-
-}
-
-function updateRouteInfo(route, routeNote){
-
-  let routeInfo =
-  document.getElementById("routeInfo");
-
-  let distanceText =
-  formatDistance(route.summary.totalDistance);
-
-  let selectedMode =
-  document.getElementById("travelMode").value;
-
-  let speedKmh =
-  modeSpeeds[selectedMode] || 35;
-
-  let distanceKm =
-  route.summary.totalDistance / 1000;
-
-  let calculatedTimeSeconds =
-  (distanceKm / speedKmh) * 3600;
-
-  let timeText =
-  formatTime(calculatedTimeSeconds);
+  let speedKmh = modeSpeeds[currentTravelMode] || 35;
+  let distanceKm = route.summary.totalDistance / 1000;
+  let calculatedTimeSeconds = (distanceKm / speedKmh) * 3600;
+  let timeText = formatTime(calculatedTimeSeconds);
 
   let instructionsHtml = "";
 
   if(route.instructions && route.instructions.length > 0){
-
-    instructionsHtml =
-    route.instructions
-    .slice(0,8)
-    .map((instruction,index)=>{
-
-      return `${index + 1}. ${instruction.text}`;
-
-    })
-    .join("<br>");
-
+    instructionsHtml = route.instructions.slice(0,8).map((instruction,index)=>{
+      return `${index+1}. ${instruction.text}`;
+    }).join("<br>");
   }
 
   let noteHtml = "";
 
   if(routeNote){
-
-    noteHtml =
-    `<br><b>ملاحظة الوصول</b><br>${routeNote}<br>`;
-
+    noteHtml = `<br><b>ملاحظة الوصول</b><br>${routeNote}<br>`;
   }
 
   routeInfo.innerHTML = `
-
     <b>معلومات المسار</b><br>
     المسافة: ${distanceText}<br>
     الوقت المتوقع: ${timeText}<br>
     ${noteHtml}<br>
     <b>تعليمات الملاحة</b><br>
     ${instructionsHtml || "لا توجد تعليمات متاحة"}
-
   `;
-
 }
 
 function drawMainRouteLine(route){
-
   if(routeLine){
-
     map.removeLayer(routeLine);
-    routeLine = null;
-
   }
 
-  let coordinates =
-  route.coordinates.map(c=>[c.lat,c.lng]);
+  let coordinates = route.coordinates.map(c=>[c.lat,c.lng]);
 
   routeLine = L.polyline(coordinates,{
-
     pane:"routePane",
     color:"#0066ff",
     weight:8,
     opacity:1,
     interactive:false
-
   }).addTo(map);
-
-  if(routeLine.bringToFront){
-    routeLine.bringToFront();
-  }
-
 }
 
 function drawRouteArrows(route){
-
   if(routeDecorator){
-
     map.removeLayer(routeDecorator);
-
   }
 
-  let coordinates =
-  route.coordinates.map(c=>[c.lat,c.lng]);
+  let coordinates = route.coordinates.map(c=>[c.lat,c.lng]);
 
   routeDecorator = L.polylineDecorator(coordinates,{
-
     pane:"routePane",
-
     patterns:[
-
       {
         offset:25,
         repeat:80,
         symbol:L.Symbol.arrowHead({
-
           pixelSize:12,
           polygon:false,
           pathOptions:{
@@ -1985,105 +861,71 @@ function drawRouteArrows(route){
             weight:2,
             color:"#0066ff"
           }
-
         })
       }
-
     ]
-
   }).addTo(map);
-
 }
 
-/* =========================
-    DRAW ROUTE
-========================== */
-
-function drawRoute(hospital, options){
-
+function drawRoute(hospital,options){
   if(!userLocation){
-
     alert("لم يتم تحديد موقعك بعد");
     return;
-
   }
 
   options = options || {};
 
-  const target =
-  options.targetLatLng || [
-
+  const target = options.targetLatLng || [
     hospital.geometry.coordinates[1],
     hospital.geometry.coordinates[0]
-
   ];
 
-  const routeNote =
-  options.routeNote || "";
+  const routeNote = options.routeNote || "";
 
   activeTarget = target;
+  activeHospital = hospital;
+  arrivalShown = false;
   lastRouteUpdateLocation = [...userLocation];
 
   if(routingControl){
-
     map.removeControl(routingControl);
-
   }
 
   if(routeDecorator){
-
     map.removeLayer(routeDecorator);
     routeDecorator = null;
-
   }
 
   if(routeLine){
-
     map.removeLayer(routeLine);
     routeLine = null;
-
   }
 
-  currentRouteCoordinates = [];
-
-  routingControl =
-  L.Routing.control({
-
-    router: L.Routing.osrmv1({
-      profile: currentTravelMode
+  routingControl = L.Routing.control({
+    router:L.Routing.osrmv1({
+      profile:currentTravelMode
     }),
 
     waypoints:[
-
       L.latLng(userLocation),
       L.latLng(target)
-
     ],
 
     routeWhileDragging:false,
-
     addWaypoints:false,
-
     draggableWaypoints:false,
-
     fitSelectedRoutes:true,
-
     show:false,
 
     lineOptions:{
-
       pane:"routePane",
-
       styles:[
-
         {
           color:"#0066ff",
           weight:1,
           opacity:0
         }
-
       ]
-
     },
 
     createMarker:function(){
@@ -2093,40 +935,55 @@ function drawRoute(hospital, options){
   }).addTo(map);
 
   routingControl.on("routesfound",function(e){
-
     let route = e.routes[0];
-
-    speakFirstRouteInstruction(route);
 
     currentRouteCoordinates = route.coordinates;
 
-    updateRouteInfo(route, routeNote);
+    updateRouteInfo(route,routeNote);
     drawMainRouteLine(route);
     drawRouteArrows(route);
-
-    // تأكيد ظهور المسار فوق طبقات الأحياء والحدود
-    setTimeout(function(){
-      let routePane = map.getPane("routePane");
-      if(routePane){
-        routePane.style.zIndex = 1200;
-      }
-      let healthPane = map.getPane("healthPane");
-      if(healthPane){
-        healthPane.style.zIndex = 1300;
-      }
-    },100);
-
   });
 
   routingControl.on("routingerror",function(){
-
     document.getElementById("routeInfo").innerHTML =
     `<b>معلومات المسار</b><br>تعذر حساب المسار. تأكد من اتصال الإنترنت وخدمة التوجيه.`;
-
   });
-
 }
 
+function toggleNavigationMode(){
+  isNavigationMode = !isNavigationMode;
+
+  let btn = document.getElementById("navigationModeBtn");
+
+  if(isNavigationMode){
+    btn.innerText = "إيقاف وضع الملاحة";
+    btn.classList.add("nav-active-button");
+
+    if(userLocation){
+      map.setView(userLocation,17);
+    }
+  }else{
+    btn.innerText = "تشغيل وضع الملاحة";
+    btn.classList.remove("nav-active-button");
+  }
+}
+
+function centerOnMyLocation(){
+  if(!userLocation){
+    alert("لم يتم تحديد موقعك بعد");
+    return;
+  }
+
+  map.setView(userLocation,17,{animate:true});
+}
+
+function changeTravelMode(){
+  currentTravelMode = document.getElementById("travelMode").value;
+
+  if(activeHospital){
+    drawRoute(activeHospital);
+  }
+}
 </script>
 
 </body>
