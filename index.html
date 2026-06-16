@@ -405,6 +405,10 @@ html,body{
     الانتقال للمستشفى المحدد
   </button>
 
+  <button onclick="goToSelectedHospitalViaNearestRoad()">
+    الانتقال عبر أقرب شارع للمستشفى
+  </button>
+
   <button id="navigationModeBtn" onclick="toggleNavigationMode()">
     تشغيل وضع الملاحة
   </button>
@@ -545,6 +549,8 @@ let lastLocation = null;
 let activeTarget = null;
 let routeDecorator = null;
 let routeLine = null;
+let nearestRoadPointMarker = null;
+let roadFeatures = [];
 let lastRouteUpdateLocation = null;
 let currentRouteCoordinates = [];
 let isNavigationMode = false;
@@ -1004,6 +1010,8 @@ function initLayers(data){
     health
 
   ] = data;
+
+  roadFeatures = roads.features || [];
 
   /* =========================
       BOUNDARY
@@ -1486,6 +1494,266 @@ function goToSelectedHospital(){
 
 
 /* =========================
+    SELECTED HOSPITAL VIA NEAREST ROAD
+========================== */
+
+function getSelectedHospitalFeature(){
+
+  const selectedHospital =
+  document.getElementById("hospitalSelect").value;
+
+  if(selectedHospital === ""){
+
+    alert("اختر مستشفى");
+    return null;
+
+  }
+
+  let targetHospital = null;
+
+  hospitals.forEach(h=>{
+
+    if(
+      h.properties.BUSNIESS_NAME_A
+      ===
+      selectedHospital
+    ){
+
+      targetHospital = h;
+
+    }
+
+  });
+
+  if(!targetHospital){
+
+    alert("المستشفى غير موجود");
+    return null;
+
+  }
+
+  return targetHospital;
+
+}
+
+function closestPointOnSegment(pointLat, pointLon, aLat, aLon, bLat, bLon){
+
+  let latScale = 111320;
+  let lonScale = 111320 * Math.cos(pointLat * Math.PI / 180);
+
+  let px = pointLon * lonScale;
+  let py = pointLat * latScale;
+
+  let ax = aLon * lonScale;
+  let ay = aLat * latScale;
+
+  let bx = bLon * lonScale;
+  let by = bLat * latScale;
+
+  let dx = bx - ax;
+  let dy = by - ay;
+
+  let t = 0;
+
+  if(dx !== 0 || dy !== 0){
+
+    t =
+    ((px - ax) * dx + (py - ay) * dy) /
+    (dx * dx + dy * dy);
+
+    t = Math.max(0, Math.min(1, t));
+
+  }
+
+  let closestX = ax + t * dx;
+  let closestY = ay + t * dy;
+
+  let closestLon = closestX / lonScale;
+  let closestLat = closestY / latScale;
+
+  let d = Math.sqrt(
+    Math.pow(px - closestX, 2) +
+    Math.pow(py - closestY, 2)
+  );
+
+  return {
+    lat:closestLat,
+    lon:closestLon,
+    distance:d
+  };
+
+}
+
+function getRoadName(feature){
+
+  if(!feature || !feature.properties){
+    return "طريق غير معروف";
+  }
+
+  return (
+    feature.properties.name ||
+    feature.properties.Name ||
+    feature.properties.NAME ||
+    feature.properties.road_name ||
+    feature.properties.type ||
+    feature.properties.highway ||
+    "طريق غير معروف"
+  );
+
+}
+
+function findNearestRoadPoint(lat, lon){
+
+  if(!roadFeatures || roadFeatures.length === 0){
+    return null;
+  }
+
+  let nearest = null;
+  let minDistance = Infinity;
+
+  roadFeatures.forEach(feature=>{
+
+    if(!feature.geometry || !feature.geometry.coordinates){
+      return;
+    }
+
+    let geometryType = feature.geometry.type;
+    let lines = [];
+
+    if(geometryType === "LineString"){
+
+      lines = [feature.geometry.coordinates];
+
+    }
+
+    else if(geometryType === "MultiLineString"){
+
+      lines = feature.geometry.coordinates;
+
+    }
+
+    else{
+
+      return;
+
+    }
+
+    lines.forEach(line=>{
+
+      for(let i = 0; i < line.length - 1; i++){
+
+        let a = line[i];
+        let b = line[i + 1];
+
+        let result = closestPointOnSegment(
+          lat,
+          lon,
+          a[1],
+          a[0],
+          b[1],
+          b[0]
+        );
+
+        if(result.distance < minDistance){
+
+          minDistance = result.distance;
+
+          nearest = {
+            lat:result.lat,
+            lon:result.lon,
+            distance:result.distance,
+            roadName:getRoadName(feature)
+          };
+
+        }
+
+      }
+
+    });
+
+  });
+
+  return nearest;
+
+}
+
+function showNearestRoadPoint(point){
+
+  if(nearestRoadPointMarker){
+
+    map.removeLayer(nearestRoadPointMarker);
+    nearestRoadPointMarker = null;
+
+  }
+
+  nearestRoadPointMarker = L.circleMarker([point.lat, point.lon],{
+
+    pane:"routePane",
+    radius:7,
+    color:"#000000",
+    weight:2,
+    fillColor:"#00bcd4",
+    fillOpacity:1
+
+  }).addTo(map)
+  .bindPopup(
+    "أقرب نقطة على الشارع للمستشفى<br>" +
+    "الشارع: " + point.roadName + "<br>" +
+    "البعد عن المستشفى: " + Math.round(point.distance) + " متر"
+  );
+
+}
+
+function goToSelectedHospitalViaNearestRoad(){
+
+  let targetHospital =
+  getSelectedHospitalFeature();
+
+  if(!targetHospital){
+    return;
+  }
+
+  if(!roadFeatures || roadFeatures.length === 0){
+
+    alert("لم يتم تحميل طبقة الطرق بعد");
+    return;
+
+  }
+
+  let hospitalLat =
+  targetHospital.geometry.coordinates[1];
+
+  let hospitalLon =
+  targetHospital.geometry.coordinates[0];
+
+  let nearestRoadPoint =
+  findNearestRoadPoint(hospitalLat, hospitalLon);
+
+  if(!nearestRoadPoint){
+
+    alert("لم يتم العثور على شارع قريب من المستشفى");
+    return;
+
+  }
+
+  showNearestRoadPoint(nearestRoadPoint);
+
+  drawRoute(targetHospital, {
+    targetLatLng:[
+      nearestRoadPoint.lat,
+      nearestRoadPoint.lon
+    ],
+    routeNote:
+      "تم توجيه المسار إلى أقرب شارع للمستشفى<br>" +
+      "الشارع: " + nearestRoadPoint.roadName + "<br>" +
+      "بعد نقطة الوصول عن المستشفى: " +
+      Math.round(nearestRoadPoint.distance) + " متر"
+  });
+
+}
+
+
+/* =========================
     ROUTE INFO + INSTRUCTIONS + ARROWS
 ========================== */
 
@@ -1598,7 +1866,7 @@ function speakFirstRouteInstruction(route){
 
 }
 
-function updateRouteInfo(route){
+function updateRouteInfo(route, routeNote){
 
   let routeInfo =
   document.getElementById("routeInfo");
@@ -1637,11 +1905,21 @@ function updateRouteInfo(route){
 
   }
 
+  let noteHtml = "";
+
+  if(routeNote){
+
+    noteHtml =
+    `<br><b>ملاحظة الوصول</b><br>${routeNote}<br>`;
+
+  }
+
   routeInfo.innerHTML = `
 
     <b>معلومات المسار</b><br>
     المسافة: ${distanceText}<br>
-    الوقت المتوقع: ${timeText}<br><br>
+    الوقت المتوقع: ${timeText}<br>
+    ${noteHtml}<br>
     <b>تعليمات الملاحة</b><br>
     ${instructionsHtml || "لا توجد تعليمات متاحة"}
 
@@ -1721,7 +1999,7 @@ function drawRouteArrows(route){
     DRAW ROUTE
 ========================== */
 
-function drawRoute(hospital){
+function drawRoute(hospital, options){
 
   if(!userLocation){
 
@@ -1730,12 +2008,18 @@ function drawRoute(hospital){
 
   }
 
-  const target = [
+  options = options || {};
+
+  const target =
+  options.targetLatLng || [
 
     hospital.geometry.coordinates[1],
     hospital.geometry.coordinates[0]
 
   ];
+
+  const routeNote =
+  options.routeNote || "";
 
   activeTarget = target;
   lastRouteUpdateLocation = [...userLocation];
@@ -1816,7 +2100,7 @@ function drawRoute(hospital){
 
     currentRouteCoordinates = route.coordinates;
 
-    updateRouteInfo(route);
+    updateRouteInfo(route, routeNote);
     drawMainRouteLine(route);
     drawRouteArrows(route);
 
