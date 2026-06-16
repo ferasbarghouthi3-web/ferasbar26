@@ -139,6 +139,15 @@ html,body{
 
 }
 
+/* Layer control فوق الليجند */
+.leaflet-bottom.leaflet-left .leaflet-control-layers{
+
+  margin-bottom:10px;
+  border-radius:10px;
+  box-shadow:0 0 10px rgba(0,0,0,0.3);
+
+}
+
 
 /* =========================
     LIVE NAVIGATION PANEL
@@ -193,6 +202,159 @@ html,body{
   color:#7a4f00;
   font-size:12px;
   display:none;
+
+}
+
+
+/* =========================
+    MOBILE RESPONSIVE + COLLAPSE DETAILS
+========================== */
+
+@media screen and (max-width: 768px){
+
+  .control-box{
+
+    width:180px;
+    padding:8px;
+    bottom:10px;
+    right:10px;
+    font-size:11px;
+
+  }
+
+  .control-box b{
+
+    font-size:12px;
+
+  }
+
+  .control-box select,
+  .control-box button{
+
+    padding:5px;
+    margin-top:5px;
+    font-size:11px;
+
+  }
+
+  .route-info{
+
+    font-size:10px;
+    max-height:90px;
+    padding:6px;
+
+  }
+
+  .off-route-warning{
+
+    font-size:10px;
+    padding:6px;
+
+  }
+
+  #routeDetailsBox{
+
+    display:none;
+
+  }
+
+}
+
+@media screen and (max-width: 480px){
+
+  .control-box{
+
+    width:155px;
+    padding:6px;
+    bottom:8px;
+    right:8px;
+
+  }
+
+  .control-box select,
+  .control-box button{
+
+    font-size:10px;
+    padding:4px;
+
+  }
+
+  .route-info{
+
+    font-size:9px;
+    max-height:70px;
+
+  }
+
+}
+
+/* =========================
+    CUSTOM MAP SYMBOLS
+========================== */
+
+.hospital-icon{
+
+  background:#e53935;
+  color:white;
+  border:2px solid white;
+  border-radius:50%;
+  width:26px;
+  height:26px;
+  line-height:26px;
+  text-align:center;
+  font-weight:bold;
+  font-size:16px;
+  box-shadow:0 0 6px rgba(0,0,0,0.45);
+
+}
+
+.legend-title{
+
+  font-weight:bold;
+  margin-bottom:8px;
+  font-size:14px;
+
+}
+
+.legend-item{
+
+  display:flex;
+  align-items:center;
+  gap:7px;
+  margin-bottom:6px;
+
+}
+
+.legend-symbol{
+
+  width:18px;
+  height:14px;
+  display:inline-block;
+  border-radius:2px;
+
+}
+
+.legend-line{
+
+  width:24px;
+  height:0;
+  display:inline-block;
+  border-top:4px solid #777777;
+
+}
+
+.legend-hospital{
+
+  width:20px;
+  height:20px;
+  line-height:20px;
+  text-align:center;
+  border-radius:50%;
+  background:#e53935;
+  color:white;
+  border:1px solid white;
+  font-weight:bold;
+  display:inline-block;
 
 }
 
@@ -257,18 +419,30 @@ html,body{
     <option value="bike">دراجة</option>
   </select>
 
-  <div class="route-info">
-    <b>السرعة الحالية</b><br>
-    <span id="speedValue">0 كم/ساعة</span>
-  </div>
+  <button id="voiceNavigationBtn" onclick="toggleVoiceNavigation()">
+    إيقاف الملاحة الصوتية
+  </button>
 
-  <div id="offRouteWarning" class="off-route-warning">
-    لقد خرجت عن المسار، جارٍ إعادة التوجيه...
-  </div>
+  <button id="toggleDetailsBtn" onclick="toggleRouteDetails()">
+    عرض / إخفاء تفاصيل الملاحة
+  </button>
 
-  <div id="routeInfo" class="route-info">
-    <b>معلومات المسار</b><br>
-    اختر مستشفى لعرض المسافة والوقت والتعليمات.
+  <div id="routeDetailsBox">
+
+    <div class="route-info">
+      <b>السرعة الحالية</b><br>
+      <span id="speedValue">0 كم/ساعة</span>
+    </div>
+
+    <div id="offRouteWarning" class="off-route-warning">
+      لقد خرجت عن المسار، جارٍ إعادة التوجيه...
+    </div>
+
+    <div id="routeInfo" class="route-info">
+      <b>معلومات المسار</b><br>
+      اختر مستشفى لعرض المسافة والوقت والتعليمات.
+    </div>
+
   </div>
 
 </div>
@@ -284,11 +458,61 @@ html,body{
 
 <script>
 
+
+function toggleRouteDetails(){
+
+  let box =
+  document.getElementById("routeDetailsBox");
+
+  if(!box){
+    return;
+  }
+
+  if(box.style.display === "none" || getComputedStyle(box).display === "none"){
+
+    box.style.display = "block";
+
+  }
+
+  else{
+
+    box.style.display = "none";
+
+  }
+
+}
+
 /* =========================
     MAP
 ========================== */
 
 var map = L.map("map").setView([31.9038,35.2034],11);
+
+/* =========================
+    MAP PANES ORDER
+    boundaryPane: حدود المحافظة
+    livingPane: الأحياء في الأسفل
+    roadsPane: شبكة الطرق الرمادية فوق الأحياء
+    routePane: خط المسار الأزرق فوق كل الطبقات المضلعة
+    healthPane: المستشفيات فوق المسار والطبقات
+========================== */
+
+map.createPane("boundaryPane");
+map.getPane("boundaryPane").style.zIndex = 300;
+
+map.createPane("livingPane");
+map.getPane("livingPane").style.zIndex = 400;
+
+map.createPane("roadsPane");
+map.getPane("roadsPane").style.zIndex = 650;
+
+map.createPane("routePane");
+map.getPane("routePane").style.zIndex = 1200;
+map.getPane("routePane").style.pointerEvents = "none";
+
+map.createPane("healthPane");
+map.getPane("healthPane").style.zIndex = 1300;
+map.getPane("healthPane").style.pointerEvents = "auto";
 
 /* =========================
     BASEMAPS
@@ -320,16 +544,32 @@ let userMarker = null;
 let lastLocation = null;
 let activeTarget = null;
 let routeDecorator = null;
+let routeLine = null;
 let lastRouteUpdateLocation = null;
 let currentRouteCoordinates = [];
 let isNavigationMode = false;
 let currentBearing = 0;
 let lastOffRouteAlertTime = 0;
 let currentTravelMode = "car";
+let voiceNavigation = true;
+let lastSpokenInstruction = "";
 
 const rerouteDistanceMeters = 20;
 const offRouteDistanceMeters = 50;
 const offRouteAlertDelay = 8000;
+
+/* =========================
+    LOGICAL TRAVEL SPEEDS
+    car: داخل المدينة
+    foot: مشي
+    bike: دراجة
+========================== */
+
+const modeSpeeds = {
+  car: 35,
+  foot: 5,
+  bike: 15
+};
 
 /* =========================
     USER LOCATION + LIVE TRACKING + DIRECTION
@@ -745,9 +985,6 @@ Promise.all([
   fetch("Living.json")
   .then(r=>r.json()),
 
-  fetch("Parking.json")
-  .then(r=>r.json()),
-
   fetch("Health_Services.json")
   .then(r=>r.json())
 
@@ -764,7 +1001,6 @@ function initLayers(data){
     boundary,
     roads,
     living,
-    parking,
     health
 
   ] = data;
@@ -775,9 +1011,11 @@ function initLayers(data){
 
   var boundaryLayer = L.geoJSON(boundary,{
 
+    pane:"boundaryPane",
+
     style:{
 
-      color:"#ffffff",
+      color:"#000000",
       weight:3,
       fillOpacity:0
 
@@ -793,6 +1031,8 @@ function initLayers(data){
 
   var roadsLayer = L.geoJSON(roads,{
 
+    pane:"roadsPane",
+
     style:function(feature){
 
       let roadType =
@@ -805,8 +1045,9 @@ function initLayers(data){
 
         return{
 
-          color:"#ff3300",
-          weight:5
+          color:"#555555",
+          weight:4,
+          opacity:0.9
 
         };
 
@@ -816,8 +1057,9 @@ function initLayers(data){
 
         return{
 
-          color:"#ffaa00",
-          weight:2
+          color:"#888888",
+          weight:2,
+          opacity:0.8
 
         };
 
@@ -835,30 +1077,14 @@ function initLayers(data){
 
   var livingLayer = L.geoJSON(living,{
 
-    style:{
-
-      color:"#00bfff",
-      weight:2,
-      fillOpacity:0
-
-    },
-
-    onEachFeature:popupAttributes
-
-  }).addTo(map);
-
-  /* =========================
-      PARKING
-  ========================== */
-
-  var parkingLayer = L.geoJSON(parking,{
+    pane:"livingPane",
 
     style:{
 
-      color:"#1b5e20",
+      color:"#000000",
       weight:1.5,
-      fillColor:"#2e7d32",
-      fillOpacity:0.8
+      fillColor:"#f3e2c7",
+      fillOpacity:0.65
 
     },
 
@@ -872,16 +1098,24 @@ function initLayers(data){
 
   var healthLayer = L.geoJSON(health,{
 
+    pane:"healthPane",
+
     pointToLayer:function(feature,latlng){
 
-      return L.circleMarker(latlng,{
+      let hospitalIcon = L.divIcon({
 
-        radius:6,
-        fillColor:"#ff0000",
-        color:"#ffffff",
-        weight:1,
-        fillOpacity:0.9
+        className:"hospital-icon",
+        html:"H",
+        iconSize:[26,26],
+        iconAnchor:[13,13],
+        popupAnchor:[0,-13]
 
+      });
+
+      return L.marker(latlng,{
+        pane:"healthPane",
+        icon:hospitalIcon,
+        zIndexOffset:10000
       });
 
     },
@@ -939,24 +1173,64 @@ function initLayers(data){
     "Living Areas":
     livingLayer,
 
-    "Parking":
-    parkingLayer,
-
     "Health Services":
     healthLayer
 
   };
 
-  L.control.layers(
+  // سيتم إضافة بوكس التحكم بالطبقات بعد الليجند
+  // حتى يظهر فوقه في الجهة اليسرى السفلية
 
-    baseMaps,
-    overlayMaps,
+  // ترتيب الطبقات بعد تشغيل/إطفاء أي لاير
+  function keepLayerOrder(){
 
-    {
-      collapsed:false
+    if(boundaryLayer && boundaryLayer.bringToBack){
+      boundaryLayer.bringToBack();
     }
 
-  ).addTo(map);
+    if(livingLayer && livingLayer.bringToBack){
+      livingLayer.bringToBack();
+    }
+
+    if(roadsLayer && roadsLayer.bringToFront){
+      roadsLayer.bringToFront();
+    }
+
+    if(healthLayer){
+
+      healthLayer.eachLayer(function(layer){
+
+        if(layer.setZIndexOffset){
+          layer.setZIndexOffset(10000);
+        }
+
+        if(layer.bringToFront){
+          layer.bringToFront();
+        }
+
+      });
+
+      if(healthLayer.bringToFront){
+        healthLayer.bringToFront();
+      }
+
+    }
+
+  }
+
+  map.on("overlayadd", function(){
+
+    setTimeout(keepLayerOrder, 100);
+
+  });
+
+  map.on("zoomend moveend", function(){
+
+    setTimeout(keepLayerOrder, 100);
+
+  });
+
+  setTimeout(keepLayerOrder, 500);
 
   /* =========================
       LEGEND
@@ -977,55 +1251,26 @@ function initLayers(data){
 
     div.innerHTML = `
 
-      <b>Legend</b><br><br>
+      <div class="legend-title">Legend</div>
 
-      <div>
-        <span style="
-        width:16px;
-        height:16px;
-        background:#ff3300;
-        display:inline-block;
-        ">
-        </span>
-
-        Regional Roads
+      <div class="legend-item">
+        <span class="legend-symbol" style="background:#f3e2c7; border:1.5px solid #000000;"></span>
+        <span>Living Areas</span>
       </div>
 
-      <div>
-        <span style="
-        width:16px;
-        height:16px;
-        background:#ffaa00;
-        display:inline-block;
-        ">
-        </span>
-
-        Internal Roads
+      <div class="legend-item">
+        <span class="legend-line"></span>
+        <span>Road Network</span>
       </div>
 
-      <div>
-        <span style="
-        width:16px;
-        height:16px;
-        background:#2e7d32;
-        display:inline-block;
-        ">
-        </span>
-
-        Parking
+      <div class="legend-item">
+        <span class="legend-symbol" style="background:transparent; border:2px solid #000000;"></span>
+        <span>Ramallah Boundary</span>
       </div>
 
-      <div>
-        <span style="
-        width:16px;
-        height:16px;
-        background:#ff0000;
-        border-radius:50%;
-        display:inline-block;
-        ">
-        </span>
-
-        Health Services
+      <div class="legend-item">
+        <span class="legend-hospital">H</span>
+        <span>Health Services</span>
       </div>
 
     `;
@@ -1035,6 +1280,22 @@ function initLayers(data){
   };
 
   legend.addTo(map);
+
+  /* =========================
+      LAYER CONTROL ABOVE LEGEND
+  ========================== */
+
+  L.control.layers(
+
+    baseMaps,
+    overlayMaps,
+
+    {
+      collapsed:false,
+      position:"bottomleft"
+    }
+
+  ).addTo(map);
 
 }
 
@@ -1253,6 +1514,90 @@ function formatTime(seconds){
 
 }
 
+
+function toggleVoiceNavigation(){
+
+  voiceNavigation = !voiceNavigation;
+
+  let btn = document.getElementById("voiceNavigationBtn");
+
+  if(voiceNavigation){
+
+    if(btn){
+      btn.innerText = "إيقاف الملاحة الصوتية";
+      btn.classList.add("nav-active-button");
+    }
+
+  }
+
+  else{
+
+    if("speechSynthesis" in window){
+      speechSynthesis.cancel();
+    }
+
+    if(btn){
+      btn.innerText = "تشغيل الملاحة الصوتية";
+      btn.classList.remove("nav-active-button");
+    }
+
+  }
+
+}
+
+function speakInstruction(text){
+
+  if(!voiceNavigation){
+    return;
+  }
+
+  if(!("speechSynthesis" in window)){
+    return;
+  }
+
+  if(!text || text.trim() === ""){
+    return;
+  }
+
+  speechSynthesis.cancel();
+
+  let speech =
+  new SpeechSynthesisUtterance(text);
+
+  speech.lang = "ar-SA";
+  speech.rate = 1;
+  speech.pitch = 1;
+
+  speechSynthesis.speak(speech);
+
+}
+
+function speakFirstRouteInstruction(route){
+
+  if(
+    !route.instructions ||
+    route.instructions.length === 0
+  ){
+    return;
+  }
+
+  let firstInstruction =
+  route.instructions[0].text;
+
+  if(
+    firstInstruction &&
+    firstInstruction !== lastSpokenInstruction
+  ){
+
+    speakInstruction(firstInstruction);
+
+    lastSpokenInstruction =
+    firstInstruction;
+
+  }
+
+}
+
 function updateRouteInfo(route){
 
   let routeInfo =
@@ -1261,8 +1606,20 @@ function updateRouteInfo(route){
   let distanceText =
   formatDistance(route.summary.totalDistance);
 
+  let selectedMode =
+  document.getElementById("travelMode").value;
+
+  let speedKmh =
+  modeSpeeds[selectedMode] || 35;
+
+  let distanceKm =
+  route.summary.totalDistance / 1000;
+
+  let calculatedTimeSeconds =
+  (distanceKm / speedKmh) * 3600;
+
   let timeText =
-  formatTime(route.summary.totalTime);
+  formatTime(calculatedTimeSeconds);
 
   let instructionsHtml = "";
 
@@ -1292,6 +1649,34 @@ function updateRouteInfo(route){
 
 }
 
+function drawMainRouteLine(route){
+
+  if(routeLine){
+
+    map.removeLayer(routeLine);
+    routeLine = null;
+
+  }
+
+  let coordinates =
+  route.coordinates.map(c=>[c.lat,c.lng]);
+
+  routeLine = L.polyline(coordinates,{
+
+    pane:"routePane",
+    color:"#0066ff",
+    weight:8,
+    opacity:1,
+    interactive:false
+
+  }).addTo(map);
+
+  if(routeLine.bringToFront){
+    routeLine.bringToFront();
+  }
+
+}
+
 function drawRouteArrows(route){
 
   if(routeDecorator){
@@ -1305,6 +1690,8 @@ function drawRouteArrows(route){
 
   routeDecorator = L.polylineDecorator(coordinates,{
 
+    pane:"routePane",
+
     patterns:[
 
       {
@@ -1315,6 +1702,7 @@ function drawRouteArrows(route){
           pixelSize:12,
           polygon:false,
           pathOptions:{
+            pane:"routePane",
             stroke:true,
             weight:2,
             color:"#0066ff"
@@ -1365,6 +1753,13 @@ function drawRoute(hospital){
 
   }
 
+  if(routeLine){
+
+    map.removeLayer(routeLine);
+    routeLine = null;
+
+  }
+
   currentRouteCoordinates = [];
 
   routingControl =
@@ -1393,12 +1788,14 @@ function drawRoute(hospital){
 
     lineOptions:{
 
+      pane:"routePane",
+
       styles:[
 
         {
           color:"#0066ff",
-          weight:6,
-          opacity:0.8
+          weight:1,
+          opacity:0
         }
 
       ]
@@ -1415,10 +1812,25 @@ function drawRoute(hospital){
 
     let route = e.routes[0];
 
+    speakFirstRouteInstruction(route);
+
     currentRouteCoordinates = route.coordinates;
 
     updateRouteInfo(route);
+    drawMainRouteLine(route);
     drawRouteArrows(route);
+
+    // تأكيد ظهور المسار فوق طبقات الأحياء والحدود
+    setTimeout(function(){
+      let routePane = map.getPane("routePane");
+      if(routePane){
+        routePane.style.zIndex = 1200;
+      }
+      let healthPane = map.getPane("healthPane");
+      if(healthPane){
+        healthPane.style.zIndex = 1300;
+      }
+    },100);
 
   });
 
