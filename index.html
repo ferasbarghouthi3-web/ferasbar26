@@ -448,6 +448,54 @@ html,body{
 
 }
 
+
+
+/* =========================
+    ACCESSIBILITY ANALYSIS
+========================== */
+
+.accessibility-box{
+
+  margin-top:10px;
+  padding:10px;
+  background:rgba(232,245,233,0.78);
+  border:1px solid rgba(46,125,50,0.22);
+  border-radius:14px;
+  font-size:12px;
+  line-height:1.7;
+
+}
+
+.accessibility-box b{
+
+  color:#1b5e20;
+
+}
+
+.accessibility-result{
+
+  margin-top:8px;
+  padding:8px;
+  background:rgba(255,255,255,0.72);
+  border-radius:10px;
+  font-size:12px;
+
+}
+
+.accessibility-served{
+
+  color:#1b5e20;
+  font-weight:bold;
+
+}
+
+.accessibility-unserved{
+
+  color:#b71c1c;
+  font-weight:bold;
+
+}
+
 /* =========================
     CUSTOM MAP SYMBOLS
 ========================== */
@@ -594,6 +642,30 @@ html,body{
     📋 عرض / إخفاء تفاصيل الملاحة
   </button>
 
+  <div class="accessibility-box">
+    <b>📊 تحليل الوصولية</b>
+
+    <select id="accessRadius">
+      <option value="1000">نطاق الخدمة 1 كم</option>
+      <option value="3000" selected>نطاق الخدمة 3 كم</option>
+      <option value="5000">نطاق الخدمة 5 كم</option>
+      <option value="10000">نطاق الخدمة 10 كم</option>
+    </select>
+
+    <button onclick="runAccessibilityAnalysis()">
+      🟢 تشغيل تحليل الوصولية
+    </button>
+
+    <button onclick="clearAccessibilityAnalysis()">
+      🧹 مسح التحليل
+    </button>
+
+    <div id="accessibilityResult" class="accessibility-result">
+      اختر نطاق الخدمة ثم شغّل التحليل.
+    </div>
+  </div>
+
+
   <div id="routeDetailsBox">
 
     <div class="route-info">
@@ -687,6 +759,9 @@ map.getPane("boundaryPane").style.zIndex = 300;
 map.createPane("livingPane");
 map.getPane("livingPane").style.zIndex = 400;
 
+map.createPane("accessibilityPane");
+map.getPane("accessibilityPane").style.zIndex = 500;
+
 map.createPane("roadsPane");
 map.getPane("roadsPane").style.zIndex = 650;
 
@@ -737,6 +812,8 @@ let lastOffRouteAlertTime = 0;
 let currentTravelMode = "car";
 let voiceNavigation = true;
 let lastSpokenInstruction = "";
+let livingLayerGlobal = null;
+let accessibilityLayer = L.layerGroup().addTo(map);
 
 const rerouteDistanceMeters = 20;
 const offRouteDistanceMeters = 50;
@@ -1276,6 +1353,8 @@ function initLayers(data){
 
   }).addTo(map);
 
+  livingLayerGlobal = livingLayer;
+
   /* =========================
       HEALTH
   ========================== */
@@ -1358,7 +1437,10 @@ function initLayers(data){
     livingLayer,
 
     "Health Services":
-    healthLayer
+    healthLayer,
+
+    "Accessibility Analysis":
+    accessibilityLayer
 
   };
 
@@ -1374,6 +1456,10 @@ function initLayers(data){
 
     if(livingLayer && livingLayer.bringToBack){
       livingLayer.bringToBack();
+    }
+
+    if(accessibilityLayer && accessibilityLayer.bringToFront){
+      accessibilityLayer.bringToFront();
     }
 
     if(roadsLayer && roadsLayer.bringToFront){
@@ -1457,6 +1543,21 @@ function initLayers(data){
         <span>Health Services</span>
       </div>
 
+      <div class="legend-item">
+        <span class="legend-symbol" style="background:rgba(76,175,80,0.18); border:2px dashed #2e7d32;"></span>
+        <span>Service Area</span>
+      </div>
+
+      <div class="legend-item">
+        <span class="legend-symbol" style="background:rgba(76,175,80,0.55); border:1.5px solid #1b5e20;"></span>
+        <span>Served Areas</span>
+      </div>
+
+      <div class="legend-item">
+        <span class="legend-symbol" style="background:rgba(229,57,53,0.45); border:1.5px solid #b71c1c;"></span>
+        <span>Unserved Areas</span>
+      </div>
+
     `;
 
     return div;
@@ -1480,6 +1581,222 @@ function initLayers(data){
     }
 
   ).addTo(map);
+
+}
+
+
+
+/* =========================
+    ACCESSIBILITY ANALYSIS
+========================== */
+
+function getFeatureCenter(feature){
+
+  let coords = [];
+
+  function collectCoordinates(arr){
+
+    if(typeof arr[0] === "number"){
+      coords.push(arr);
+      return;
+    }
+
+    arr.forEach(collectCoordinates);
+
+  }
+
+  if(!feature.geometry || !feature.geometry.coordinates){
+    return null;
+  }
+
+  collectCoordinates(feature.geometry.coordinates);
+
+  if(coords.length === 0){
+    return null;
+  }
+
+  let sumLon = 0;
+  let sumLat = 0;
+
+  coords.forEach(function(c){
+    sumLon += c[0];
+    sumLat += c[1];
+  });
+
+  return [
+    sumLat / coords.length,
+    sumLon / coords.length
+  ];
+
+}
+
+function isFeatureServed(feature, radiusKm){
+
+  let center = getFeatureCenter(feature);
+
+  if(!center){
+    return false;
+  }
+
+  for(let i = 0; i < hospitals.length; i++){
+
+    let h = hospitals[i];
+
+    if(!h.geometry || !h.geometry.coordinates){
+      continue;
+    }
+
+    let hLat = h.geometry.coordinates[1];
+    let hLon = h.geometry.coordinates[0];
+
+    let d = distance(
+      center[0],
+      center[1],
+      hLat,
+      hLon
+    );
+
+    if(d <= radiusKm){
+      return true;
+    }
+
+  }
+
+  return false;
+
+}
+
+function runAccessibilityAnalysis(){
+
+  if(!livingLayerGlobal){
+    alert("طبقة الأحياء غير جاهزة بعد");
+    return;
+  }
+
+  if(hospitals.length === 0){
+    alert("طبقة المستشفيات غير جاهزة بعد");
+    return;
+  }
+
+  clearAccessibilityAnalysis(false);
+
+  let radiusMeters =
+  Number(document.getElementById("accessRadius").value);
+
+  let radiusKm = radiusMeters / 1000;
+
+  let servedCount = 0;
+  let unservedCount = 0;
+
+  hospitals.forEach(function(h){
+
+    if(!h.geometry || !h.geometry.coordinates){
+      return;
+    }
+
+    let lat = h.geometry.coordinates[1];
+    let lon = h.geometry.coordinates[0];
+
+    L.circle([lat,lon],{
+      pane:"accessibilityPane",
+      radius:radiusMeters,
+      color:"#2e7d32",
+      weight:1.8,
+      dashArray:"6,6",
+      fillColor:"#4caf50",
+      fillOpacity:0.13,
+      interactive:false
+    }).addTo(accessibilityLayer);
+
+  });
+
+  livingLayerGlobal.eachLayer(function(layer){
+
+    if(!layer.feature){
+      return;
+    }
+
+    let served = isFeatureServed(layer.feature, radiusKm);
+
+    if(served){
+
+      servedCount++;
+
+      layer.setStyle({
+        color:"#1b5e20",
+        weight:2,
+        fillColor:"#4caf50",
+        fillOpacity:0.55
+      });
+
+    }
+
+    else{
+
+      unservedCount++;
+
+      layer.setStyle({
+        color:"#b71c1c",
+        weight:2,
+        fillColor:"#e53935",
+        fillOpacity:0.45
+      });
+
+    }
+
+  });
+
+  let total = servedCount + unservedCount;
+  let servedPercent = total > 0 ? ((servedCount / total) * 100).toFixed(1) : 0;
+  let unservedPercent = total > 0 ? ((unservedCount / total) * 100).toFixed(1) : 0;
+
+  let result = document.getElementById("accessibilityResult");
+
+  if(result){
+
+    result.innerHTML = `
+      <b>نتيجة التحليل</b><br>
+      نطاق الخدمة: ${radiusKm} كم<br>
+      <span class="accessibility-served">الأحياء المخدومة: ${servedCount} (${servedPercent}%)</span><br>
+      <span class="accessibility-unserved">الأحياء غير المخدومة: ${unservedCount} (${unservedPercent}%)</span>
+    `;
+
+  }
+
+}
+
+function clearAccessibilityAnalysis(resetText = true){
+
+  if(accessibilityLayer){
+    accessibilityLayer.clearLayers();
+  }
+
+  if(livingLayerGlobal){
+
+    livingLayerGlobal.eachLayer(function(layer){
+
+      if(layer.setStyle){
+        layer.setStyle({
+          color:"#000000",
+          weight:1.5,
+          fillColor:"#f3e2c7",
+          fillOpacity:0.65
+        });
+      }
+
+    });
+
+  }
+
+  if(resetText){
+
+    let result = document.getElementById("accessibilityResult");
+
+    if(result){
+      result.innerHTML = "اختر نطاق الخدمة ثم شغّل التحليل.";
+    }
+
+  }
 
 }
 
