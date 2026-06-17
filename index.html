@@ -32,33 +32,120 @@ html,body{
 }
 
 /* =========================
-    CONTROL BOX
+    MODERN HEADER + SIDEBAR
+========================== */
+
+.app-header{
+
+  position:absolute;
+  top:14px;
+  left:50%;
+  transform:translateX(-50%);
+  z-index:1200;
+
+  min-width:330px;
+  text-align:center;
+
+  background:linear-gradient(135deg, rgba(13,71,161,0.94), rgba(0,150,136,0.90));
+  color:white;
+
+  padding:10px 24px;
+  border-radius:18px;
+
+  box-shadow:0 10px 30px rgba(0,0,0,0.28);
+  backdrop-filter:blur(12px);
+  -webkit-backdrop-filter:blur(12px);
+
+}
+
+.app-header h2{
+
+  margin:0;
+  font-size:18px;
+  letter-spacing:0.4px;
+
+}
+
+.app-header span{
+
+  display:block;
+  margin-top:3px;
+  font-size:12px;
+  opacity:0.95;
+
+}
+
+.sidebar-toggle{
+
+  position:absolute;
+  top:18px;
+  right:18px;
+  z-index:1300;
+
+  width:44px;
+  height:44px;
+
+  border:none;
+  border-radius:50%;
+
+  background:linear-gradient(135deg,#0d47a1,#009688);
+  color:white;
+  font-size:22px;
+  cursor:pointer;
+
+  box-shadow:0 8px 22px rgba(0,0,0,0.28);
+
+}
+
+/* =========================
+    CONTROL SIDEBAR
 ========================== */
 
 .control-box{
 
   position:absolute;
+  top:78px;
+  right:18px;
 
-  bottom:20px;
-  right:20px;
+  z-index:1200;
 
-  z-index:1000;
+  width:285px;
+  max-height:calc(100vh - 105px);
+  overflow:auto;
 
-  width:260px;
+  background:rgba(255,255,255,0.72);
+  backdrop-filter:blur(18px);
+  -webkit-backdrop-filter:blur(18px);
 
-  background:rgba(255,255,255,0.82);
+  border:1px solid rgba(255,255,255,0.8);
+  border-radius:20px;
 
-  backdrop-filter:blur(10px);
-  -webkit-backdrop-filter:blur(10px);
+  padding:14px;
 
-  border:1px solid rgba(255,255,255,0.6);
+  box-shadow:0 18px 45px rgba(0,0,0,0.28);
 
+  transition:0.35s ease;
+
+}
+
+.control-box.closed{
+
+  transform:translateX(330px);
+  opacity:0;
+  pointer-events:none;
+
+}
+
+.control-title{
+
+  display:block;
+  text-align:center;
+  background:linear-gradient(135deg,#0d47a1,#009688);
+  color:white;
+  padding:9px;
   border-radius:14px;
-
-  padding:12px;
-
-  box-shadow:
-    0 8px 25px rgba(0,0,0,0.20);
+  margin-bottom:8px;
+  font-size:14px;
 
 }
 
@@ -69,15 +156,35 @@ html,body{
 
   margin-top:8px;
 
-  padding:8px;
+  padding:9px;
 
-  border-radius:6px;
+  border-radius:12px;
 
-  border:1px solid #ccc;
+  border:1px solid rgba(13,71,161,0.18);
 
   font-size:13px;
 
   cursor:pointer;
+
+  background:rgba(255,255,255,0.78);
+
+  box-shadow:0 3px 10px rgba(0,0,0,0.08);
+
+}
+
+.control-box button{
+
+  background:linear-gradient(135deg,#ffffff,#eef7ff);
+  color:#0d47a1;
+  font-weight:bold;
+  transition:0.25s;
+
+}
+
+.control-box button:hover{
+
+  transform:translateY(-2px);
+  box-shadow:0 7px 18px rgba(0,0,0,0.18);
 
 }
 
@@ -113,19 +220,18 @@ html,body{
 
 .legend{
 
-  background:rgba(255,255,255,0.82);
+  background:rgba(255,255,255,0.72);
 
-  backdrop-filter:blur(10px);
-  -webkit-backdrop-filter:blur(10px);
+  backdrop-filter:blur(18px);
+  -webkit-backdrop-filter:blur(18px);
 
-  border:1px solid rgba(255,255,255,0.6);
+  border:1px solid rgba(255,255,255,0.8);
 
   padding:10px;
 
-  border-radius:14px;
+  border-radius:18px;
 
-  box-shadow:
-    0 8px 25px rgba(0,0,0,0.20);
+  box-shadow:0 12px 35px rgba(0,0,0,0.22);
 
   line-height:22px;
 
@@ -155,8 +261,17 @@ html,body{
 .leaflet-bottom.leaflet-left .leaflet-control-layers{
 
   margin-bottom:10px;
-  border-radius:10px;
-  box-shadow:0 0 10px rgba(0,0,0,0.3);
+  border-radius:18px !important;
+  box-shadow:0 12px 35px rgba(0,0,0,0.22) !important;
+
+}
+
+.leaflet-control-layers{
+
+  background:rgba(255,255,255,0.72) !important;
+  backdrop-filter:blur(18px);
+  -webkit-backdrop-filter:blur(18px);
+  border:1px solid rgba(255,255,255,0.8) !important;
 
 }
 
@@ -169,7 +284,7 @@ html,body{
 
   margin-top:10px;
   padding:8px;
-  background:#f7f7f7;
+  background:rgba(255,255,255,0.58);
   border-radius:8px;
   font-size:12px;
   line-height:1.7;
@@ -224,13 +339,38 @@ html,body{
 
 @media screen and (max-width: 768px){
 
+  .app-header{
+
+    min-width:240px;
+    padding:8px 14px;
+
+  }
+
+  .app-header h2{
+
+    font-size:14px;
+
+  }
+
+  .app-header span{
+
+    font-size:10px;
+
+  }
+
   .control-box{
 
-    width:180px;
+    width:205px;
     padding:8px;
-    bottom:10px;
+    top:70px;
     right:10px;
     font-size:11px;
+
+  }
+
+  .control-box.closed{
+
+    transform:translateX(245px);
 
   }
 
@@ -276,10 +416,18 @@ html,body{
 
   .control-box{
 
-    width:155px;
+    width:175px;
     padding:6px;
-    bottom:8px;
+    top:66px;
     right:8px;
+
+  }
+
+  .sidebar-toggle{
+
+    width:38px;
+    height:38px;
+    font-size:18px;
 
   }
 
@@ -370,59 +518,17 @@ html,body{
 
 }
 
-/* =========================
-    GLASS EFFECT ENHANCEMENTS
-========================== */
-
-.leaflet-control-layers{
-
-  background:rgba(255,255,255,0.82) !important;
-
-  backdrop-filter:blur(10px);
-  -webkit-backdrop-filter:blur(10px);
-
-  border-radius:14px !important;
-
-  border:1px solid rgba(255,255,255,0.6) !important;
-
-  box-shadow:
-    0 8px 25px rgba(0,0,0,0.20) !important;
-
-}
-
-.control-box button{
-
-  transition:0.25s;
-  background:rgba(255,255,255,0.75);
-
-}
-
-.control-box button:hover{
-
-  transform:translateY(-2px);
-  background:rgba(255,255,255,0.95);
-
-}
-
-.control-box select{
-
-  background:rgba(255,255,255,0.65);
-
-}
-
-.route-info{
-
-  background:rgba(247,247,247,0.72);
-
-  backdrop-filter:blur(6px);
-  -webkit-backdrop-filter:blur(6px);
-
-}
-
 </style>
 </head>
 
 <body>
+
+<div class="app-header">
+  <h2>Ramallah Health Web GIS</h2>
+  <span>Decision Support System for Health Services</span>
+</div>
+
+<button id="sidebarToggle" class="sidebar-toggle" onclick="toggleSidebar()">☰</button>
 
 <div id="map"></div>
 
@@ -430,9 +536,9 @@ html,body{
      CONTROL BOX
 ========================= -->
 
-<div class="control-box">
+<div id="controlBox" class="control-box">
 
-  <b>البحث عن المستشفيات</b>
+  <b class="control-title">🚑 البحث عن المستشفيات</b>
 
   <select id="hospitalType">
 
@@ -459,19 +565,19 @@ html,body{
   </select>
 
   <button onclick="findNearestHospital()">
-    أقرب مستشفى
+    🚑 أقرب مستشفى
   </button>
 
   <button onclick="goToSelectedHospital()">
-    الانتقال للمستشفى المحدد
+    🏥 الانتقال للمستشفى المحدد
   </button>
 
   <button id="navigationModeBtn" onclick="toggleNavigationMode()">
-    تشغيل وضع الملاحة
+    🧭 تشغيل وضع الملاحة
   </button>
 
   <button id="centerLocationBtn" onclick="centerOnMyLocation()">
-    إعادة التمركز على موقعي
+    📍 إعادة التمركز على موقعي
   </button>
 
   <select id="travelMode" onchange="changeTravelMode()">
@@ -481,11 +587,11 @@ html,body{
   </select>
 
   <button id="voiceNavigationBtn" onclick="toggleVoiceNavigation()">
-    إيقاف الملاحة الصوتية
+    🔊 إيقاف الملاحة الصوتية
   </button>
 
   <button id="toggleDetailsBtn" onclick="toggleRouteDetails()">
-    عرض / إخفاء تفاصيل الملاحة
+    📋 عرض / إخفاء تفاصيل الملاحة
   </button>
 
   <div id="routeDetailsBox">
@@ -519,6 +625,23 @@ html,body{
 
 <script>
 
+
+function toggleSidebar(){
+
+  let box = document.getElementById("controlBox");
+  let btn = document.getElementById("sidebarToggle");
+
+  if(!box){
+    return;
+  }
+
+  box.classList.toggle("closed");
+
+  if(btn){
+    btn.innerHTML = box.classList.contains("closed") ? "☰" : "×";
+  }
+
+}
 
 function toggleRouteDetails(){
 
@@ -666,7 +789,7 @@ function toggleNavigationMode(){
 
   if(isNavigationMode){
 
-    btn.innerText = "إيقاف وضع الملاحة";
+    btn.innerText = "🧭 إيقاف وضع الملاحة";
     btn.classList.add("nav-active-button");
 
     if(userLocation){
@@ -677,7 +800,7 @@ function toggleNavigationMode(){
 
   else{
 
-    btn.innerText = "تشغيل وضع الملاحة";
+    btn.innerText = "🧭 تشغيل وضع الملاحة";
     btn.classList.remove("nav-active-button");
     resetMapRotation();
 
@@ -1585,7 +1708,7 @@ function toggleVoiceNavigation(){
   if(voiceNavigation){
 
     if(btn){
-      btn.innerText = "إيقاف الملاحة الصوتية";
+      btn.innerText = "🔊 إيقاف الملاحة الصوتية";
       btn.classList.add("nav-active-button");
     }
 
@@ -1598,7 +1721,7 @@ function toggleVoiceNavigation(){
     }
 
     if(btn){
-      btn.innerText = "تشغيل الملاحة الصوتية";
+      btn.innerText = "🔇 تشغيل الملاحة الصوتية";
       btn.classList.remove("nav-active-button");
     }
 
