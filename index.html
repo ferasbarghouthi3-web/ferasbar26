@@ -373,6 +373,123 @@ html,body{
 }
 
 
+
+/* =========================
+    FULL NAVIGATION MODE
+========================== */
+
+.full-nav-panel{
+  position:absolute;
+  z-index:2600;
+  left:50%;
+  transform:translateX(-50%);
+  width:min(92vw,520px);
+  display:none;
+  direction:rtl;
+}
+
+.full-nav-top{
+  top:14px;
+  background:linear-gradient(135deg,rgba(13,71,161,0.96),rgba(0,150,136,0.92));
+  color:white;
+  border-radius:18px;
+  padding:14px 18px;
+  box-shadow:0 12px 34px rgba(0,0,0,0.35);
+  backdrop-filter:blur(14px);
+  -webkit-backdrop-filter:blur(14px);
+}
+
+.full-nav-instruction{
+  font-size:18px;
+  font-weight:bold;
+  line-height:1.5;
+}
+
+.full-nav-sub{
+  margin-top:4px;
+  font-size:12px;
+  opacity:0.95;
+}
+
+.full-nav-bottom{
+  bottom:18px;
+  background:rgba(255,255,255,0.90);
+  color:#222;
+  border-radius:20px;
+  padding:12px;
+  box-shadow:0 12px 34px rgba(0,0,0,0.35);
+  backdrop-filter:blur(14px);
+  -webkit-backdrop-filter:blur(14px);
+}
+
+.full-nav-stats{
+  display:grid;
+  grid-template-columns:1fr 1fr 1fr;
+  gap:8px;
+  text-align:center;
+}
+
+.full-nav-stat{
+  background:rgba(13,71,161,0.08);
+  border-radius:14px;
+  padding:8px 5px;
+  font-size:12px;
+}
+
+.full-nav-stat b{
+  display:block;
+  color:#0d47a1;
+  font-size:16px;
+  margin-bottom:2px;
+}
+
+.full-nav-actions{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:8px;
+  margin-top:10px;
+}
+
+.full-nav-actions button{
+  border:none;
+  border-radius:14px;
+  padding:10px;
+  font-weight:bold;
+  cursor:pointer;
+  box-shadow:0 5px 14px rgba(0,0,0,0.18);
+}
+
+.full-nav-exit{
+  background:#263238;
+  color:white;
+}
+
+.full-nav-emergency{
+  background:#d32f2f;
+  color:white;
+}
+
+body.full-navigation-active .app-header,
+body.full-navigation-active .control-box,
+body.full-navigation-active .sidebar-toggle,
+body.full-navigation-active .leaflet-control-layers,
+body.full-navigation-active .legend{
+  display:none !important;
+}
+
+body.full-navigation-active .full-nav-panel{
+  display:block;
+}
+
+body.full-navigation-active .compass-control{
+  bottom:150px;
+  right:18px;
+}
+
+body.full-navigation-active .leaflet-control-zoom{
+  display:none !important;
+}
+
 /* =========================
     MOBILE RESPONSIVE + COLLAPSE DETAILS
 ========================== */
@@ -635,6 +752,33 @@ html,body{
   🧭
 </div>
 
+<div id="fullNavTop" class="full-nav-panel full-nav-top">
+  <div id="fullNavInstruction" class="full-nav-instruction">ابدأ مساراً لتفعيل الملاحة الكاملة</div>
+  <div id="fullNavSub" class="full-nav-sub">سيتم تثبيت موقعك أسفل الشاشة وتدوير الخريطة مع اتجاه السيارة</div>
+</div>
+
+<div id="fullNavBottom" class="full-nav-panel full-nav-bottom">
+  <div class="full-nav-stats">
+    <div class="full-nav-stat">
+      <b id="fullNavSpeed">0.0</b>
+      كم/ساعة
+    </div>
+    <div class="full-nav-stat">
+      <b id="fullNavETA">--</b>
+      وقت الوصول
+    </div>
+    <div class="full-nav-stat">
+      <b id="fullNavDistance">--</b>
+      المسافة
+    </div>
+  </div>
+
+  <div class="full-nav-actions">
+    <button class="full-nav-emergency" onclick="callActiveHospital()">🚨 طوارئ</button>
+    <button class="full-nav-exit" onclick="toggleFullNavigationMode(false)">إغلاق الملاحة</button>
+  </div>
+</div>
+
 <!-- =========================
      CONTROL BOX
 ========================= -->
@@ -677,6 +821,10 @@ html,body{
 
   <button id="navigationModeBtn" onclick="toggleNavigationMode()">
     🧭 تشغيل وضع الملاحة
+  </button>
+
+  <button id="fullNavigationBtn" onclick="toggleFullNavigationMode()">
+    🚗 وضع الملاحة الكامل
   </button>
 
   <button id="centerLocationBtn" onclick="centerOnMyLocation()">
@@ -878,6 +1026,12 @@ let routingControl = null;
 let userMarker = null;
 let lastLocation = null;
 let activeTarget = null;
+let activeHospitalName = null;
+let activeHospitalPhone = null;
+let isFullNavigationMode = false;
+let lastRouteDistanceText = "--";
+let lastRouteTimeText = "--";
+let lastRouteInstructionText = "ابدأ مساراً لتفعيل الملاحة الكاملة";
 let routeDecorator = null;
 let routeLine = null;
 let lastRouteUpdateLocation = null;
@@ -966,11 +1120,95 @@ function toggleNavigationMode(){
     btn.classList.remove("nav-active-button");
     resetMapRotation();
 
+    if(isFullNavigationMode){
+      toggleFullNavigationMode(false);
+    }
+
     if(userLocation){
       map.setView(userLocation, Math.max(map.getZoom(), 17), {animate:true});
     }
 
   }
+
+}
+
+
+function toggleFullNavigationMode(forceState){
+
+  let nextState = typeof forceState === "boolean" ? forceState : !isFullNavigationMode;
+
+  if(nextState && !activeTarget){
+    alert("اختر مستشفى أو احسب أقرب مستشفى أولاً");
+    return;
+  }
+
+  isFullNavigationMode = nextState;
+
+  document.body.classList.toggle("full-navigation-active", isFullNavigationMode);
+
+  let btn = document.getElementById("fullNavigationBtn");
+  if(btn){
+    btn.innerText = isFullNavigationMode ? "إيقاف الملاحة الكاملة" : "🚗 وضع الملاحة الكامل";
+    btn.classList.toggle("nav-active-button", isFullNavigationMode);
+  }
+
+  if(isFullNavigationMode){
+    if(!isNavigationMode){
+      isNavigationMode = true;
+      let navBtn = document.getElementById("navigationModeBtn");
+      if(navBtn){
+        navBtn.innerText = "🧭 إيقاف وضع الملاحة";
+        navBtn.classList.add("nav-active-button");
+      }
+    }
+    requestCompassPermission();
+    if(userLocation){
+      applyNavigationMode(getNavigationAngle());
+    }
+  }
+
+  updateFullNavigationPanel();
+
+}
+
+function updateFullNavigationPanel(){
+
+  let instruction = document.getElementById("fullNavInstruction");
+  let sub = document.getElementById("fullNavSub");
+  let speed = document.getElementById("fullNavSpeed");
+  let eta = document.getElementById("fullNavETA");
+  let dist = document.getElementById("fullNavDistance");
+
+  if(instruction){
+    instruction.innerHTML = lastRouteInstructionText || "تابع المسار";
+  }
+
+  if(sub){
+    sub.innerHTML = activeHospitalName ? "الوجهة: " + activeHospitalName : "وضع الملاحة الكامل";
+  }
+
+  if(speed){
+    speed.innerHTML = currentCarSpeed.toFixed(1);
+  }
+
+  if(eta){
+    eta.innerHTML = lastRouteTimeText || "--";
+  }
+
+  if(dist){
+    dist.innerHTML = lastRouteDistanceText || "--";
+  }
+
+}
+
+function callActiveHospital(){
+
+  if(activeHospitalPhone){
+    window.location.href = "tel:" + activeHospitalPhone;
+    return;
+  }
+
+  alert("رقم المستشفى غير متوفر");
 
 }
 
@@ -1086,6 +1324,8 @@ function updateSpeed(pos){
 
   speedElement.innerHTML =
   currentCarSpeed.toFixed(1) + " كم/ساعة";
+
+  updateFullNavigationPanel();
 
 }
 
@@ -2466,6 +2706,8 @@ function updateRouteInfo(route){
 
   if(route.instructions && route.instructions.length > 0){
 
+    lastRouteInstructionText = route.instructions[0].text || "تابع المسار";
+
     instructionsHtml =
     route.instructions
     .slice(0,8)
@@ -2477,6 +2719,10 @@ function updateRouteInfo(route){
     .join("<br>");
 
   }
+
+  lastRouteDistanceText = distanceText;
+  lastRouteTimeText = timeText;
+  updateFullNavigationPanel();
 
   routeInfo.innerHTML = `
 
@@ -2590,6 +2836,8 @@ function updateLiveETA(target){
   if(!speedKmh || speedKmh < 5){
 
     liveETA.innerHTML = "السيارة متوقفة أو السرعة منخفضة";
+    lastRouteTimeText = "متوقف";
+    updateFullNavigationPanel();
     return;
 
   }
@@ -2599,12 +2847,14 @@ function updateLiveETA(target){
   if(minutes < 1){
 
     liveETA.innerHTML = "أقل من دقيقة";
+    lastRouteTimeText = "أقل من دقيقة";
 
   }
 
   else if(minutes < 60){
 
     liveETA.innerHTML = minutes.toFixed(1) + " دقيقة";
+    lastRouteTimeText = liveETA.innerHTML;
 
   }
 
@@ -2614,8 +2864,16 @@ function updateLiveETA(target){
     let remainingMinutes = Math.round(minutes % 60);
 
     liveETA.innerHTML = hours + " ساعة و " + remainingMinutes + " دقيقة";
+    lastRouteTimeText = liveETA.innerHTML;
 
   }
+
+  if(userLocation && target){
+    let remainingKmText = distance(userLocation[0], userLocation[1], target[0], target[1]);
+    lastRouteDistanceText = remainingKmText >= 1 ? remainingKmText.toFixed(2) + " كم" : Math.round(remainingKmText * 1000) + " متر";
+  }
+
+  updateFullNavigationPanel();
 
 }
 
@@ -2672,6 +2930,8 @@ function drawRoute(hospital){
   ];
 
   activeTarget = target;
+  activeHospitalName = hospital.properties ? hospital.properties.BUSNIESS_NAME_A : null;
+  activeHospitalPhone = activeHospitalName ? hospitalPhones[activeHospitalName] : null;
   startLiveETA(target);
   lastRouteUpdateLocation = [...userLocation];
 
@@ -2754,6 +3014,7 @@ function drawRoute(hospital){
     updateRouteInfo(route);
     drawMainRouteLine(route);
     drawRouteArrows(route);
+    updateFullNavigationPanel();
 
     // تأكيد ظهور المسار فوق طبقات الأحياء والحدود
     setTimeout(function(){
