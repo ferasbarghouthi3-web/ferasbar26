@@ -1019,6 +1019,61 @@ select{
 
 }
 
+/* =========================
+   LOCATION PERMISSION BANNER
+========================== */
+
+.location-banner{
+  position:fixed;
+  top:78px;
+  left:50%;
+  transform:translateX(-50%);
+  z-index:4200;
+  display:none;
+  width:min(92vw,430px);
+  direction:rtl;
+  text-align:center;
+  background:linear-gradient(135deg,#ff9800,#f57c00);
+  color:white;
+  padding:11px 14px;
+  border-radius:15px;
+  font-size:13px;
+  font-weight:bold;
+  box-shadow:0 10px 28px rgba(0,0,0,0.30);
+  backdrop-filter:blur(12px);
+  -webkit-backdrop-filter:blur(12px);
+}
+
+.location-banner button{
+  margin-top:8px;
+  width:100%;
+  border:none;
+  border-radius:11px;
+  padding:9px;
+  background:white;
+  color:#e65100;
+  font-weight:bold;
+  cursor:pointer;
+}
+
+.location-enabled-button{
+  background:#2e7d32 !important;
+  color:white !important;
+}
+
+@media screen and (max-width:768px){
+  .location-banner{
+    top:64px;
+    width:calc(100vw - 20px);
+    font-size:12px;
+    padding:10px;
+  }
+
+  body.full-navigation-active .location-banner{
+    display:none !important;
+  }
+}
+
 </style>
 </head>
 
@@ -1032,6 +1087,12 @@ select{
 <button id="sidebarToggle" class="sidebar-toggle" onclick="toggleSidebar()">☰</button>
 
 <div id="map"></div>
+
+<div id="locationBanner" class="location-banner">
+  ⚠️ يرجى السماح بالوصول إلى الموقع لتفعيل الملاحة
+  <button onclick="requestLocationPermission()">📡 تفعيل الموقع الآن</button>
+</div>
+
 
 <div id="compass" class="compass-control" title="Compass">
   <span>N</span>
@@ -1115,6 +1176,10 @@ select{
 
   <button id="centerLocationBtn" onclick="centerOnMyLocation()">
     📍 إعادة التمركز على موقعي
+  </button>
+
+  <button id="enableLocationBtn" onclick="requestLocationPermission()">
+    📡 تفعيل الموقع
   </button>
 
   <select id="travelMode" onchange="changeTravelMode()">
@@ -1352,6 +1417,8 @@ const hospitalPhones = {
 
 let userLocation = null;
 let routingControl = null;
+let locationWatchId = null;
+let locationPermissionRequested = false;
 
 let userMarker = null;
 let lastLocation = null;
@@ -2016,7 +2083,62 @@ function checkAutoReroute(){
 
 }
 
-navigator.geolocation.watchPosition(function(pos){
+
+/* =========================
+    LOCATION PERMISSION REQUEST
+========================== */
+
+function showLocationBanner(message){
+
+  const banner = document.getElementById("locationBanner");
+
+  if(!banner){
+    return;
+  }
+
+  if(message){
+    banner.firstChild.nodeValue = message + " ";
+  }
+
+  banner.style.display = "block";
+
+}
+
+function hideLocationBanner(){
+
+  const banner = document.getElementById("locationBanner");
+
+  if(banner){
+    banner.style.display = "none";
+  }
+
+}
+
+function updateLocationButton(enabled){
+
+  const btn = document.getElementById("enableLocationBtn");
+
+  if(!btn){
+    return;
+  }
+
+  if(enabled){
+
+    btn.innerHTML = "✅ الموقع مفعل";
+    btn.classList.add("location-enabled-button");
+
+  }
+
+  else{
+
+    btn.innerHTML = "📡 تفعيل الموقع";
+    btn.classList.remove("location-enabled-button");
+
+  }
+
+}
+
+function handleLocationSuccess(pos){
 
   userLocation = [
 
@@ -2025,22 +2147,182 @@ navigator.geolocation.watchPosition(function(pos){
 
   ];
 
+  hideLocationBanner();
+  updateLocationButton(true);
+
   updateUserMarker(userLocation);
   updateSpeed(pos);
   checkAutoReroute();
   checkOffRoute();
 
-}, function(){
+}
 
-  alert("لم يتم السماح بتحديد الموقع");
+function handleLocationError(error){
 
-}, {
+  updateLocationButton(false);
 
-  enableHighAccuracy:true,
-  maximumAge:1000,
-  timeout:5000
+  if(error && error.code === error.PERMISSION_DENIED){
+
+    showLocationBanner("⚠️ تم رفض إذن الموقع. فعّله من إعدادات المتصفح ثم اضغط تفعيل الموقع.");
+
+  }
+
+  else if(error && error.code === error.POSITION_UNAVAILABLE){
+
+    showLocationBanner("⚠️ تعذر تحديد الموقع. تأكد من تشغيل GPS وخدمة الموقع في الهاتف.");
+
+  }
+
+  else if(error && error.code === error.TIMEOUT){
+
+    showLocationBanner("⚠️ انتهت مهلة تحديد الموقع. حاول مرة أخرى في مكان مفتوح.");
+
+  }
+
+  else{
+
+    showLocationBanner("⚠️ يرجى تفعيل الموقع للاستفادة من الملاحة.");
+
+  }
+
+}
+
+function startLocationTracking(){
+
+  if(!navigator.geolocation){
+
+    showLocationBanner("⚠️ المتصفح لا يدعم خدمة الموقع.");
+    return;
+
+  }
+
+  if(locationWatchId !== null){
+    return;
+  }
+
+  locationWatchId = navigator.geolocation.watchPosition(
+
+    handleLocationSuccess,
+    handleLocationError,
+
+    {
+      enableHighAccuracy:true,
+      maximumAge:1000,
+      timeout:5000
+    }
+
+  );
+
+}
+
+function requestLocationPermission(){
+
+  locationPermissionRequested = true;
+
+  if(!navigator.geolocation){
+
+    showLocationBanner("⚠️ المتصفح لا يدعم خدمة الموقع.");
+    return;
+
+  }
+
+  navigator.geolocation.getCurrentPosition(
+
+    function(pos){
+
+      handleLocationSuccess(pos);
+      startLocationTracking();
+
+      if(userLocation){
+        map.setView(userLocation, 17, {animate:true});
+      }
+
+    },
+
+    handleLocationError,
+
+    {
+      enableHighAccuracy:true,
+      maximumAge:0,
+      timeout:10000
+    }
+
+  );
+
+}
+
+function checkLocationPermissionOnLoad(){
+
+  if(!navigator.geolocation){
+
+    showLocationBanner("⚠️ المتصفح لا يدعم خدمة الموقع.");
+    return;
+
+  }
+
+  if(navigator.permissions && navigator.permissions.query){
+
+    navigator.permissions.query({name:"geolocation"})
+    .then(function(result){
+
+      if(result.state === "granted"){
+
+        hideLocationBanner();
+        updateLocationButton(true);
+        startLocationTracking();
+
+      }
+
+      else if(result.state === "prompt"){
+
+        showLocationBanner("⚠️ اضغط تفعيل الموقع للسماح بالتتبع والملاحة.");
+
+      }
+
+      else{
+
+        showLocationBanner("⚠️ إذن الموقع مرفوض. فعّله من إعدادات المتصفح.");
+
+      }
+
+      result.onchange = function(){
+
+        if(result.state === "granted"){
+          hideLocationBanner();
+          updateLocationButton(true);
+          startLocationTracking();
+        }
+
+        else{
+          updateLocationButton(false);
+          showLocationBanner("⚠️ يرجى السماح بالوصول إلى الموقع لتفعيل الملاحة.");
+        }
+
+      };
+
+    })
+    .catch(function(){
+
+      showLocationBanner("⚠️ اضغط تفعيل الموقع للسماح بالتتبع والملاحة.");
+
+    });
+
+  }
+
+  else{
+
+    showLocationBanner("⚠️ اضغط تفعيل الموقع للسماح بالتتبع والملاحة.");
+
+  }
+
+}
+
+window.addEventListener("load", function(){
+
+  setTimeout(checkLocationPermissionOnLoad, 800);
 
 });
+
 
 /* =========================
     POPUP
