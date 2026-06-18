@@ -728,6 +728,11 @@ html,body{
       <span id="speedValue">0 كم/ساعة</span>
     </div>
 
+    <div class="route-info">
+      <b>⏱️ وقت الوصول المباشر</b><br>
+      <span id="liveETA">غير متوفر</span>
+    </div>
+
     <div id="offRouteWarning" class="off-route-warning">
       لقد خرجت عن المسار، جارٍ إعادة التوجيه...
     </div>
@@ -888,6 +893,7 @@ let voiceNavigation = true;
 let previousPosition = null;
 let previousTime = null;
 let currentCarSpeed = 0;
+let etaInterval = null;
 let lastSpokenInstruction = "";
 let livingLayerGlobal = null;
 let accessibilityLayer = L.layerGroup().addTo(map);
@@ -2552,6 +2558,99 @@ function drawRouteArrows(route){
 
 }
 
+
+/* =========================
+    LIVE ETA - وقت الوصول المباشر
+========================== */
+
+function updateLiveETA(target){
+
+  const liveETA = document.getElementById("liveETA");
+
+  if(!liveETA){
+    return;
+  }
+
+  if(!userLocation || !target){
+
+    liveETA.innerHTML = "غير متوفر";
+    return;
+
+  }
+
+  let remainingKm = distance(
+    userLocation[0],
+    userLocation[1],
+    target[0],
+    target[1]
+  );
+
+  let speedKmh = currentCarSpeed;
+
+  if(!speedKmh || speedKmh < 5){
+
+    liveETA.innerHTML = "السيارة متوقفة أو السرعة منخفضة";
+    return;
+
+  }
+
+  let minutes = (remainingKm / speedKmh) * 60;
+
+  if(minutes < 1){
+
+    liveETA.innerHTML = "أقل من دقيقة";
+
+  }
+
+  else if(minutes < 60){
+
+    liveETA.innerHTML = minutes.toFixed(1) + " دقيقة";
+
+  }
+
+  else{
+
+    let hours = Math.floor(minutes / 60);
+    let remainingMinutes = Math.round(minutes % 60);
+
+    liveETA.innerHTML = hours + " ساعة و " + remainingMinutes + " دقيقة";
+
+  }
+
+}
+
+function startLiveETA(target){
+
+  if(etaInterval){
+    clearInterval(etaInterval);
+    etaInterval = null;
+  }
+
+  updateLiveETA(target);
+
+  etaInterval = setInterval(function(){
+
+    updateLiveETA(target);
+
+  }, 1000);
+
+}
+
+function stopLiveETA(){
+
+  if(etaInterval){
+    clearInterval(etaInterval);
+    etaInterval = null;
+  }
+
+  const liveETA = document.getElementById("liveETA");
+
+  if(liveETA){
+    liveETA.innerHTML = "غير متوفر";
+  }
+
+}
+
 /* =========================
     DRAW ROUTE
 ========================== */
@@ -2573,6 +2672,7 @@ function drawRoute(hospital){
   ];
 
   activeTarget = target;
+  startLiveETA(target);
   lastRouteUpdateLocation = [...userLocation];
 
   if(routingControl){
