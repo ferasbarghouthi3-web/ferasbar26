@@ -724,7 +724,7 @@ html,body{
   <div id="routeDetailsBox">
 
     <div class="route-info">
-      <b>السرعة الحالية</b><br>
+      <b>سرعة السيارة الحالية</b><br>
       <span id="speedValue">0 كم/ساعة</span>
     </div>
 
@@ -851,6 +851,22 @@ var darkMap = L.tileLayer(
 ========================== */
 
 let hospitals = [];
+
+/* =========================
+    HOSPITAL EMERGENCY PHONES
+========================== */
+
+const hospitalPhones = {
+
+  "مستشفى الرعاية التخصصي":"022986420",
+  "مستشفى دكتور ضرغام":"022973406",
+  "مستشفى الناظر للولادة":"022955295",
+  "مستشفى أوروبا التخصصي":"",
+  "المستشفى الاستشاري العربي":"022943200",
+  "مجمع فلسطين الطبي":"022982222"
+
+};
+
 let userLocation = null;
 let routingControl = null;
 
@@ -867,6 +883,11 @@ let compassHeading = null;
 let lastOffRouteAlertTime = 0;
 let currentTravelMode = "car";
 let voiceNavigation = true;
+
+// سرعة السيارة الفعلية من GPS الهاتف فقط
+let previousPosition = null;
+let previousTime = null;
+let currentCarSpeed = 0;
 let lastSpokenInstruction = "";
 let livingLayerGlobal = null;
 let accessibilityLayer = L.layerGroup().addTo(map);
@@ -986,27 +1007,79 @@ function changeTravelMode(){
 
 function updateSpeed(pos){
 
-  let speedElement =
+  const speedElement =
   document.getElementById("speedValue");
 
   if(!speedElement){
     return;
   }
 
-  let speed = pos.coords.speed;
+  let speedKmh = 0;
 
-  if(speed === null || speed === undefined){
+  /*
+    الطريقة الأولى: السرعة المباشرة من حساس GPS
+    بعض الأجهزة تعطي pos.coords.speed بالمتر/ثانية.
+  */
+  if(
+    pos.coords.speed !== null &&
+    pos.coords.speed !== undefined &&
+    !isNaN(pos.coords.speed)
+  ){
 
-    speedElement.innerHTML = "غير متوفرة";
-    return;
+    speedKmh = pos.coords.speed * 3.6;
 
   }
 
-  let speedKmh =
-  speed * 3.6;
+  /*
+    الطريقة الثانية: إذا لم يوفر الهاتف السرعة مباشرة،
+    نحسبها من المسافة بين آخر موقع والموقع الحالي / الزمن.
+  */
+  else{
+
+    const currentPosition = [
+      pos.coords.latitude,
+      pos.coords.longitude
+    ];
+
+    const currentTime = pos.timestamp;
+
+    if(previousPosition && previousTime){
+
+      const distanceKm = distance(
+        previousPosition[0],
+        previousPosition[1],
+        currentPosition[0],
+        currentPosition[1]
+      );
+
+      const timeHours =
+      (currentTime - previousTime) / 1000 / 3600;
+
+      if(timeHours > 0){
+        speedKmh = distanceKm / timeHours;
+      }
+
+    }
+
+    previousPosition = currentPosition;
+    previousTime = currentTime;
+
+  }
+
+  // تنظيف القيم غير المنطقية الناتجة عن اهتزاز GPS
+  if(speedKmh < 0 || !isFinite(speedKmh)){
+    speedKmh = 0;
+  }
+
+  // إذا كانت السرعة أقل من 1 كم/ساعة نعتبر السيارة متوقفة
+  if(speedKmh < 1){
+    speedKmh = 0;
+  }
+
+  currentCarSpeed = speedKmh;
 
   speedElement.innerHTML =
-  speedKmh.toFixed(1) + " كم/ساعة";
+  currentCarSpeed.toFixed(1) + " كم/ساعة";
 
 }
 
@@ -1362,8 +1435,8 @@ navigator.geolocation.watchPosition(function(pos){
 }, {
 
   enableHighAccuracy:true,
-  maximumAge:0,
-  timeout:10000
+  maximumAge:1000,
+  timeout:5000
 
 });
 
@@ -1397,6 +1470,26 @@ function popupAttributes(feature, layer){
   html += `</table>`;
 
   layer.bindPopup(html);
+
+}
+
+
+/* =========================
+    EMERGENCY CALL BUTTON
+========================== */
+
+function callHospital(name){
+
+  let phone = hospitalPhones[name];
+
+  if(!phone){
+
+    alert("رقم هذا المستشفى غير متوفر حالياً");
+    return;
+
+  }
+
+  window.location.href = "tel:" + phone;
 
 }
 
@@ -1554,12 +1647,84 @@ function initLayers(data){
 
     onEachFeature:function(feature,layer){
 
-      popupAttributes(feature,layer);
-
       hospitals.push(feature);
 
       let name =
       feature.properties.BUSNIESS_NAME_A;
+
+      let phone =
+      hospitalPhones[name] || "غير متوفر";
+
+      let safeName =
+      String(name).replace(/'/g,"\\'");
+
+      let emergencyButton = "";
+
+      if(hospitalPhones[name]){
+
+        emergencyButton = `
+          <button
+            onclick="callHospital('${safeName}')"
+            style="
+              width:100%;
+              margin-top:10px;
+              padding:10px;
+              border:none;
+              border-radius:10px;
+              background:#d32f2f;
+              color:white;
+              font-weight:bold;
+              cursor:pointer;
+              box-shadow:0 4px 10px rgba(0,0,0,0.18);
+            ">
+            🚨 اتصال طوارئ
+          </button>
+        `;
+
+      }
+
+      else{
+
+        emergencyButton = `
+          <button
+            onclick="alert('رقم هذا المستشفى غير متوفر حالياً')"
+            style="
+              width:100%;
+              margin-top:10px;
+              padding:10px;
+              border:none;
+              border-radius:10px;
+              background:#9e9e9e;
+              color:white;
+              font-weight:bold;
+              cursor:pointer;
+            ">
+            🚨 الرقم غير متوفر
+          </button>
+        `;
+
+      }
+
+      layer.bindPopup(`
+
+        <div style="min-width:230px; direction:rtl; text-align:right;">
+
+          <div style="font-weight:bold; font-size:15px; margin-bottom:8px; color:#0d47a1;">
+            🏥 ${name}
+          </div>
+
+          <table class="popup-table">
+            <tr>
+              <td><b>رقم الهاتف</b></td>
+              <td>${phone}</td>
+            </tr>
+          </table>
+
+          ${emergencyButton}
+
+        </div>
+
+      `);
 
       let option =
       document.createElement("option");
