@@ -1783,11 +1783,19 @@ function applyNavigationMode(angle){
 
   const zoomLevel = Math.max(map.getZoom(), 18);
 
-  // نضع مركز الخريطة أمام المستخدم، فيظهر موقعه أسفل الشاشة مثل تطبيقات الملاحة.
+  /*
+    الوضع المستقر للملاحة الكاملة:
+    لا نقوم بتدوير الخريطة نفسها لأن تدوير Leaflet على الهاتف
+    يسبب اختفاء البلاطات وظهور الشاشة الرمادية.
+    بدلاً من ذلك نثبّت الكاميرا أمام المستخدم، ونترك سهم الموقع
+    والبوصلة يلتفّان حسب اتجاه الهاتف/السيارة.
+  */
+  const cameraAngle = currentBearing || angle || 0;
+
   const aheadCenter = getAheadPoint(
     userLocation[0],
     userLocation[1],
-    angle,
+    cameraAngle,
     90
   );
 
@@ -1795,8 +1803,9 @@ function applyNavigationMode(angle){
     animate:true
   });
 
-  rotateMap(-angle);
-  rotateCompass(angle);
+  rotateMap(0);
+  rotateCompass(getNavigationAngle());
+  rotateUserArrow(getNavigationAngle());
 
 }
 
@@ -1809,20 +1818,15 @@ function rotateMap(angle){
   }
 
   /*
-    Leaflet يضع translate3d على mapPane لتحريك البلاطات.
-    الخطأ السابق كان يلغي أو يكرر هذا التحويل، فتظهر الشاشة رمادية.
-    هنا نحافظ على تحويل Leaflet الأصلي ونزيل فقط rotate/scale القديمة.
-    scale يساعد على منع ظهور الزوايا الرمادية عند دوران الخريطة.
+    إصلاح نهائي لمشكلة الشاشة الرمادية:
+    نزيل أي rotate أو scale قديم ونحافظ فقط على translate3d
+    الذي يضعه Leaflet لتحريك البلاطات.
+    لذلك الخريطة تبقى ثابتة ومستقرة، بينما يلتف سهم الموقع والبوصلة.
   */
-  const originalTransform = pane.style.transform || "";
-
-  const cleanTransform = originalTransform
+  pane.style.transform = (pane.style.transform || "")
     .replace(/\s*rotate\([^)]*\)/g, "")
     .replace(/\s*scale\([^)]*\)/g, "")
     .trim();
-
-  pane.style.transform =
-    `${cleanTransform} rotate(${angle}deg) scale(1.35)`.trim();
 
   pane.style.transformOrigin = "50% 50%";
 
@@ -1830,22 +1834,23 @@ function rotateMap(angle){
 
 function resetMapRotation(){
 
-  const pane = map.getPane("mapPane");
-
-  if(pane){
-
-    pane.style.transform = (pane.style.transform || "")
-      .replace(/\s*rotate\([^)]*\)/g, "")
-      .replace(/\s*scale\([^)]*\)/g, "")
-      .trim();
-
-  }
-
+  rotateMap(0);
   rotateCompass(0);
+  rotateUserArrow(getNavigationAngle());
 
   setTimeout(function(){
     map.invalidateSize();
   },150);
+
+}
+
+function rotateUserArrow(angle){
+
+  const arrow = document.getElementById("userArrow");
+
+  if(arrow){
+    arrow.style.transform = `rotate(${angle}deg)`;
+  }
 
 }
 
@@ -1881,11 +1886,10 @@ window.addEventListener("deviceorientation", function(event){
 
     compassHeading = (heading + 360) % 360;
 
-    if(isNavigationMode && userLocation){
-      applyNavigationMode(compassHeading);
-    }
-
+    // في الوضع المستقر لا نحرّك الخريطة مع البوصلة حتى لا تهتز الشاشة.
+    // نلف فقط البوصلة وسهم موقع المستخدم.
     rotateCompass(compassHeading);
+    rotateUserArrow(compassHeading);
 
   }
 
@@ -2034,20 +2038,15 @@ function updateUserMarker(newLocation){
 
   }
 
-  let arrow =
-  document.getElementById("userArrow");
-
   let navigationAngle = getNavigationAngle();
 
-  if(arrow){
-
-    arrow.style.transform =
-    `rotate(${navigationAngle}deg)`;
-
-  }
-
+  // سهم الموقع يلتف مع البوصلة إذا كانت متاحة،
+  // وإلا يلتف حسب اتجاه حركة السيارة بين نقطتين GPS.
+  rotateUserArrow(navigationAngle);
   rotateCompass(navigationAngle);
-  applyNavigationMode(navigationAngle);
+
+  // الكاميرا تتبع الحركة فقط، بدون تدوير الخريطة.
+  applyNavigationMode(currentBearing || navigationAngle);
 
   lastLocation = newLocation;
 
