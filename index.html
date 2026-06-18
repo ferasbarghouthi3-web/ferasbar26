@@ -733,6 +733,284 @@ body.full-navigation-active .leaflet-control-zoom{
 
 }
 
+
+
+/* =========================
+   SMARTPHONE OPTIMIZED UI
+   واجهة مخصصة لاستخدام الهاتف
+========================== */
+
+*{
+  box-sizing:border-box;
+  -webkit-tap-highlight-color:transparent;
+}
+
+button,
+select{
+  touch-action:manipulation;
+}
+
+.mobile-quick-note{
+  display:none;
+}
+
+@media screen and (max-width: 768px){
+
+  html,body,#map{
+    height:100%;
+    width:100%;
+    overflow:hidden;
+  }
+
+  .app-header{
+    top:8px;
+    left:8px;
+    right:8px;
+    transform:none;
+    min-width:0;
+    width:auto;
+    padding:8px 46px 8px 12px;
+    border-radius:16px;
+    text-align:right;
+  }
+
+  .app-header h2{
+    font-size:13px;
+    line-height:1.3;
+  }
+
+  .app-header span{
+    font-size:10px;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+  }
+
+  .sidebar-toggle{
+    position:fixed;
+    top:14px;
+    right:14px;
+    width:42px;
+    height:42px;
+    z-index:3100;
+    font-size:20px;
+  }
+
+  .control-box{
+    position:fixed;
+    left:0;
+    right:0;
+    bottom:0;
+    top:auto;
+    width:100%;
+    max-height:62vh;
+    padding:12px 12px calc(12px + env(safe-area-inset-bottom));
+    border-radius:22px 22px 0 0;
+    overflow-y:auto;
+    overscroll-behavior:contain;
+    font-size:12px;
+    box-shadow:0 -12px 38px rgba(0,0,0,0.30);
+  }
+
+  .control-box.closed{
+    transform:translateY(calc(100% + 20px));
+    opacity:0;
+    pointer-events:none;
+  }
+
+  .control-title{
+    position:sticky;
+    top:0;
+    z-index:3;
+    font-size:13px;
+    padding:10px;
+    margin-bottom:10px;
+  }
+
+  .control-box select,
+  .control-box button{
+    min-height:44px;
+    padding:10px;
+    margin-top:8px;
+    font-size:13px;
+    border-radius:14px;
+  }
+
+  .accessibility-box{
+    padding:10px;
+    border-radius:14px;
+    font-size:12px;
+  }
+
+  #routeDetailsBox{
+    display:block;
+  }
+
+  .route-info{
+    font-size:12px;
+    max-height:120px;
+    padding:9px;
+    border-radius:12px;
+  }
+
+  .off-route-warning{
+    font-size:12px;
+    padding:9px;
+  }
+
+  .leaflet-control-zoom{
+    display:none !important;
+  }
+
+  .leaflet-control-attribution{
+    font-size:9px !important;
+    max-width:60vw;
+  }
+
+  .leaflet-bottom.leaflet-left{
+    bottom:10px;
+    left:8px;
+  }
+
+  .leaflet-control-layers{
+    max-width:46vw;
+    max-height:170px;
+    overflow:auto;
+    font-size:11px;
+  }
+
+  .legend{
+    display:none;
+  }
+
+  .compass-control{
+    position:fixed;
+    width:54px;
+    height:54px;
+    font-size:28px;
+    bottom:72px;
+    right:14px;
+    z-index:2500;
+  }
+
+  .leaflet-popup-content-wrapper{
+    border-radius:16px;
+  }
+
+  .leaflet-popup-content{
+    width:240px !important;
+    max-width:72vw !important;
+    font-size:13px;
+  }
+
+  .full-nav-panel{
+    width:calc(100vw - 18px);
+  }
+
+  .full-nav-top{
+    top:8px;
+    padding:12px 14px;
+    border-radius:16px;
+  }
+
+  .full-nav-instruction{
+    font-size:15px;
+  }
+
+  .full-nav-sub{
+    font-size:11px;
+  }
+
+  .full-nav-bottom{
+    bottom:8px;
+    padding:10px 10px calc(10px + env(safe-area-inset-bottom));
+    border-radius:18px;
+  }
+
+  .full-nav-stats{
+    gap:6px;
+  }
+
+  .full-nav-stat{
+    padding:8px 3px;
+    font-size:10px;
+  }
+
+  .full-nav-stat b{
+    font-size:14px;
+  }
+
+  .full-nav-actions button{
+    min-height:44px;
+    font-size:13px;
+  }
+
+  body.full-navigation-active .compass-control{
+    bottom:145px;
+    right:14px;
+  }
+
+}
+
+@media screen and (max-width: 420px){
+
+  .app-header h2{
+    font-size:12px;
+  }
+
+  .app-header span{
+    font-size:9px;
+  }
+
+  .control-box{
+    max-height:66vh;
+    padding-left:10px;
+    padding-right:10px;
+  }
+
+  .control-box select,
+  .control-box button{
+    min-height:42px;
+    font-size:12px;
+  }
+
+  .route-info{
+    font-size:11px;
+    max-height:105px;
+  }
+
+  .leaflet-control-layers{
+    display:none;
+  }
+
+}
+
+@media screen and (orientation: landscape) and (max-height: 520px){
+
+  .app-header{
+    display:none;
+  }
+
+  .control-box{
+    right:0;
+    left:auto;
+    bottom:0;
+    width:320px;
+    max-height:100vh;
+    border-radius:18px 0 0 18px;
+  }
+
+  .control-box.closed{
+    transform:translateX(340px);
+  }
+
+  .sidebar-toggle{
+    top:10px;
+    right:10px;
+  }
+
+}
+
 </style>
 </head>
 
@@ -945,6 +1223,50 @@ function toggleRouteDetails(){
   }
 
 }
+
+
+
+/* =========================
+   SMARTPHONE UI BEHAVIOR
+========================== */
+
+function isSmartphoneScreen(){
+  return window.matchMedia("(max-width: 768px)").matches;
+}
+
+function applySmartphoneLayout(){
+  const controlBox = document.getElementById("controlBox");
+  const toggleBtn = document.getElementById("sidebarToggle");
+
+  if(isSmartphoneScreen()){
+    document.body.classList.add("mobile-ui");
+
+    // عند فتح الموقع على الهاتف، نخفي لوحة التحكم حتى تظهر الخريطة بوضوح
+    if(controlBox && !controlBox.dataset.mobileInitialized){
+      controlBox.classList.add("closed");
+      controlBox.dataset.mobileInitialized = "true";
+    }
+
+    if(toggleBtn && controlBox){
+      toggleBtn.innerHTML = controlBox.classList.contains("closed") ? "☰" : "×";
+    }
+  }
+  else{
+    document.body.classList.remove("mobile-ui");
+  }
+
+  setTimeout(function(){
+    if(typeof map !== "undefined" && map){
+      map.invalidateSize();
+    }
+  },250);
+}
+
+window.addEventListener("load", applySmartphoneLayout);
+window.addEventListener("resize", applySmartphoneLayout);
+window.addEventListener("orientationchange", function(){
+  setTimeout(applySmartphoneLayout,400);
+});
 
 /* =========================
     MAP
