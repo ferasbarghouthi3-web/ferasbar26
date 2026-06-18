@@ -35,7 +35,15 @@ html,body{
 .leaflet-map-pane{
 
   transition:transform 0.25s linear;
-  transform-origin:center center;
+  transform-origin:50% 50%;
+  will-change:transform;
+
+}
+
+/* يمنع ظهور الفراغ الرمادي عند تدوير الخريطة في وضع الملاحة */
+body.full-navigation-active .leaflet-map-pane{
+
+  transform-origin:50% 50%;
 
 }
 
@@ -1468,6 +1476,10 @@ function toggleFullNavigationMode(forceState){
 
   document.body.classList.toggle("full-navigation-active", isFullNavigationMode);
 
+  setTimeout(function(){
+    map.invalidateSize();
+  },150);
+
   let btn = document.getElementById("fullNavigationBtn");
   if(btn){
     btn.innerText = isFullNavigationMode ? "إيقاف الملاحة الكاملة" : "🚗 وضع الملاحة الكامل";
@@ -1723,28 +1735,50 @@ function applyNavigationMode(angle){
 
 function rotateMap(angle){
 
-  let pane = map.getPane("mapPane");
+  const pane = map.getPane("mapPane");
 
   if(!pane){
     return;
   }
 
-  let baseTransform = pane.style.transform.replace(/ rotate\([^)]*\)/g, "");
+  /*
+    Leaflet يضع translate3d على mapPane لتحريك البلاطات.
+    الخطأ السابق كان يلغي أو يكرر هذا التحويل، فتظهر الشاشة رمادية.
+    هنا نحافظ على تحويل Leaflet الأصلي ونزيل فقط rotate/scale القديمة.
+    scale يساعد على منع ظهور الزوايا الرمادية عند دوران الخريطة.
+  */
+  const originalTransform = pane.style.transform || "";
 
-  pane.style.transform = `${baseTransform} rotate(${angle}deg)`;
+  const cleanTransform = originalTransform
+    .replace(/\s*rotate\([^)]*\)/g, "")
+    .replace(/\s*scale\([^)]*\)/g, "")
+    .trim();
+
+  pane.style.transform =
+    `${cleanTransform} rotate(${angle}deg) scale(1.35)`.trim();
+
   pane.style.transformOrigin = "50% 50%";
 
 }
 
 function resetMapRotation(){
 
-  let pane = map.getPane("mapPane");
+  const pane = map.getPane("mapPane");
 
   if(pane){
-    pane.style.transform = pane.style.transform.replace(/ rotate\([^)]*\)/g, "");
+
+    pane.style.transform = (pane.style.transform || "")
+      .replace(/\s*rotate\([^)]*\)/g, "")
+      .replace(/\s*scale\([^)]*\)/g, "")
+      .trim();
+
   }
 
   rotateCompass(0);
+
+  setTimeout(function(){
+    map.invalidateSize();
+  },150);
 
 }
 
