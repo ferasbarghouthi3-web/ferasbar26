@@ -28,6 +28,46 @@ html,body{
 
   width:100%;
   height:100%;
+  overflow:hidden;
+
+}
+
+.leaflet-map-pane{
+
+  transition:transform 0.25s linear;
+  transform-origin:center center;
+
+}
+
+.compass-control{
+
+  position:absolute;
+  bottom:22px;
+  right:22px;
+  z-index:2000;
+  width:66px;
+  height:66px;
+  border-radius:50%;
+  background:rgba(255,255,255,0.86);
+  backdrop-filter:blur(12px);
+  -webkit-backdrop-filter:blur(12px);
+  border:1px solid rgba(255,255,255,0.9);
+  box-shadow:0 10px 30px rgba(0,0,0,0.28);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:34px;
+  transition:transform 0.25s linear;
+
+}
+
+.compass-control span{
+
+  position:absolute;
+  top:5px;
+  font-size:11px;
+  font-weight:bold;
+  color:#b71c1c;
 
 }
 
@@ -410,6 +450,16 @@ html,body{
 
   }
 
+  .compass-control{
+
+    width:54px;
+    height:54px;
+    font-size:28px;
+    bottom:16px;
+    right:16px;
+
+  }
+
 }
 
 @media screen and (max-width: 480px){
@@ -579,6 +629,11 @@ html,body{
 <button id="sidebarToggle" class="sidebar-toggle" onclick="toggleSidebar()">☰</button>
 
 <div id="map"></div>
+
+<div id="compass" class="compass-control" title="Compass">
+  <span>N</span>
+  🧭
+</div>
 
 <!-- =========================
      CONTROL BOX
@@ -808,6 +863,7 @@ let lastRouteUpdateLocation = null;
 let currentRouteCoordinates = [];
 let isNavigationMode = false;
 let currentBearing = 0;
+let compassHeading = null;
 let lastOffRouteAlertTime = 0;
 let currentTravelMode = "car";
 let voiceNavigation = true;
@@ -869,8 +925,10 @@ function toggleNavigationMode(){
     btn.innerText = "🧭 إيقاف وضع الملاحة";
     btn.classList.add("nav-active-button");
 
+    requestCompassPermission();
+
     if(userLocation){
-      map.setView(userLocation, Math.max(map.getZoom(), 17));
+      applyNavigationMode(getNavigationAngle());
     }
 
   }
@@ -880,6 +938,10 @@ function toggleNavigationMode(){
     btn.innerText = "🧭 تشغيل وضع الملاحة";
     btn.classList.remove("nav-active-button");
     resetMapRotation();
+
+    if(userLocation){
+      map.setView(userLocation, Math.max(map.getZoom(), 17), {animate:true});
+    }
 
   }
 
@@ -948,17 +1010,73 @@ function updateSpeed(pos){
 
 }
 
+function getNavigationAngle(){
+
+  if(compassHeading !== null && !isNaN(compassHeading)){
+    return compassHeading;
+  }
+
+  return currentBearing || 0;
+
+}
+
+function getAheadPoint(lat, lon, bearing, meters){
+
+  const R = 6378137;
+  const brng = bearing * Math.PI / 180;
+  const lat1 = lat * Math.PI / 180;
+  const lon1 = lon * Math.PI / 180;
+  const d = meters / R;
+
+  const lat2 = Math.asin(
+    Math.sin(lat1) * Math.cos(d) +
+    Math.cos(lat1) * Math.sin(d) * Math.cos(brng)
+  );
+
+  const lon2 = lon1 + Math.atan2(
+    Math.sin(brng) * Math.sin(d) * Math.cos(lat1),
+    Math.cos(d) - Math.sin(lat1) * Math.sin(lat2)
+  );
+
+  return [
+    lat2 * 180 / Math.PI,
+    lon2 * 180 / Math.PI
+  ];
+
+}
+
+function rotateCompass(angle){
+
+  const compass = document.getElementById("compass");
+
+  if(compass){
+    compass.style.transform = `rotate(${-angle}deg)`;
+  }
+
+}
+
 function applyNavigationMode(angle){
 
   if(!isNavigationMode || !userLocation){
     return;
   }
 
-  map.setView(userLocation, Math.max(map.getZoom(), 17), {
+  const zoomLevel = Math.max(map.getZoom(), 18);
+
+  // نضع مركز الخريطة أمام المستخدم، فيظهر موقعه أسفل الشاشة مثل تطبيقات الملاحة.
+  const aheadCenter = getAheadPoint(
+    userLocation[0],
+    userLocation[1],
+    angle,
+    90
+  );
+
+  map.setView(aheadCenter, zoomLevel, {
     animate:true
   });
 
   rotateMap(-angle);
+  rotateCompass(angle);
 
 }
 
@@ -966,10 +1084,14 @@ function rotateMap(angle){
 
   let pane = map.getPane("mapPane");
 
-  if(pane){
-    pane.style.transform += ` rotate(${angle}deg)`;
-    pane.style.transformOrigin = "50% 50%";
+  if(!pane){
+    return;
   }
+
+  let baseTransform = pane.style.transform.replace(/ rotate\([^)]*\)/g, "");
+
+  pane.style.transform = `${baseTransform} rotate(${angle}deg)`;
+  pane.style.transformOrigin = "50% 50%";
 
 }
 
@@ -981,7 +1103,51 @@ function resetMapRotation(){
     pane.style.transform = pane.style.transform.replace(/ rotate\([^)]*\)/g, "");
   }
 
+  rotateCompass(0);
+
 }
+
+function requestCompassPermission(){
+
+  if(
+    typeof DeviceOrientationEvent !== "undefined" &&
+    typeof DeviceOrientationEvent.requestPermission === "function"
+  ){
+
+    DeviceOrientationEvent.requestPermission()
+    .catch(function(){
+      compassHeading = null;
+    });
+
+  }
+
+}
+
+window.addEventListener("deviceorientation", function(event){
+
+  let heading = null;
+
+  if(event.webkitCompassHeading !== undefined){
+    heading = event.webkitCompassHeading;
+  }
+
+  else if(event.alpha !== null){
+    heading = 360 - event.alpha;
+  }
+
+  if(heading !== null && !isNaN(heading)){
+
+    compassHeading = (heading + 360) % 360;
+
+    if(isNavigationMode && userLocation){
+      applyNavigationMode(compassHeading);
+    }
+
+    rotateCompass(compassHeading);
+
+  }
+
+}, true);
 
 function distanceToRouteMeters(point, routeCoordinates){
 
@@ -1129,14 +1295,17 @@ function updateUserMarker(newLocation){
   let arrow =
   document.getElementById("userArrow");
 
+  let navigationAngle = getNavigationAngle();
+
   if(arrow){
 
     arrow.style.transform =
-    `rotate(${angle}deg)`;
+    `rotate(${navigationAngle}deg)`;
 
   }
 
-  applyNavigationMode(currentBearing);
+  rotateCompass(navigationAngle);
+  applyNavigationMode(navigationAngle);
 
   lastLocation = newLocation;
 
