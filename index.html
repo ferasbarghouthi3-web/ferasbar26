@@ -1162,6 +1162,11 @@ select{
     🚑 أقرب مستشفى
   </button>
 
+  <button onclick="smartEmergency()"
+  style="background:#d32f2f;color:white;font-weight:bold;">
+    🚨 أحتاج أقرب طوارئ
+  </button>
+
   <button onclick="goToSelectedHospital()">
     🏥 الانتقال للمستشفى المحدد
   </button>
@@ -3091,6 +3096,49 @@ function distance(lat1,lon1,lat2,lon2){
 /* =========================
     FIND NEAREST
 ========================== */
+
+
+function smartEmergency(){
+
+  if(!userLocation){
+    alert("لم يتم تحديد موقعك بعد");
+    return;
+  }
+
+  let nearest = null;
+  let minDistance = Infinity;
+
+  hospitals.forEach(function(h){
+
+    let lat = h.geometry.coordinates[1];
+    let lon = h.geometry.coordinates[0];
+
+    let d = distance(
+      userLocation[0],
+      userLocation[1],
+      lat,
+      lon
+    );
+
+    if(d < minDistance){
+      minDistance = d;
+      nearest = h;
+    }
+  });
+
+  if(!nearest){
+    alert("لا يوجد مستشفيات متاحة");
+    return;
+  }
+
+  drawRoute(nearest);
+
+  setTimeout(function(){
+    if(!isFullNavigationMode){
+      toggleFullNavigationMode(true);
+    }
+  },1000);
+}
 
 function findNearestHospital(){
 
