@@ -1162,9 +1162,9 @@ select{
     🚑 أقرب مستشفى
   </button>
 
-  <button onclick="smartEmergency()"
-  style="background:#d32f2f;color:white;font-weight:bold;">
-    🚨 أحتاج أقرب طوارئ
+  <button onclick="smartAmbulanceCallSMS()"
+  style="background:#880e4f;color:white;font-weight:bold;">
+    🚑 اتصال + SMS إسعاف
   </button>
 
   <button onclick="goToSelectedHospital()">
@@ -3098,10 +3098,10 @@ function distance(lat1,lon1,lat2,lon2){
 ========================== */
 
 
-function smartEmergency(){
+function smartAmbulanceCallSMS(){
 
   if(!userLocation){
-    alert("لم يتم تحديد موقعك بعد");
+    alert("لم يتم تحديد موقعك بعد. اضغط تفعيل الموقع أولاً.");
     return;
   }
 
@@ -3109,6 +3109,10 @@ function smartEmergency(){
   let minDistance = Infinity;
 
   hospitals.forEach(function(h){
+
+    if(!h.geometry || !h.geometry.coordinates){
+      return;
+    }
 
     let lat = h.geometry.coordinates[1];
     let lon = h.geometry.coordinates[0];
@@ -3124,13 +3128,48 @@ function smartEmergency(){
       minDistance = d;
       nearest = h;
     }
+
   });
 
   if(!nearest){
-    alert("لا يوجد مستشفيات متاحة");
+    alert("لا يوجد مستشفى قريب متاح");
     return;
   }
 
+  let hospitalName =
+  nearest.properties.BUSNIESS_NAME_A;
+
+  let phone =
+  hospitalPhones[hospitalName];
+
+  if(!phone){
+    alert("رقم هذا المستشفى غير متوفر لإرسال طلب الإسعاف");
+    return;
+  }
+
+  let mapsLink =
+  "https://maps.google.com/?q=" +
+  userLocation[0] + "," + userLocation[1];
+
+  let message =
+  "🚨 حالة طوارئ\n" +
+  "أحتاج سيارة إسعاف.\n" +
+  "أقرب مستشفى: " + hospitalName + "\n" +
+  "المسافة التقريبية: " + minDistance.toFixed(2) + " كم\n" +
+  "موقعي الحالي:\n" +
+  mapsLink;
+
+  let confirmSend = confirm(
+    "سيتم تجهيز رسالة SMS إلى: " + hospitalName +
+    "\nرقم الهاتف: " + phone +
+    "\n\nبعد ذلك يمكنك الضغط على إرسال من تطبيق الرسائل.\n\nهل تريد المتابعة؟"
+  );
+
+  if(!confirmSend){
+    return;
+  }
+
+  // نرسم المسار للمستشفى الأقرب ونفعل الملاحة الكاملة
   drawRoute(nearest);
 
   setTimeout(function(){
@@ -3138,7 +3177,26 @@ function smartEmergency(){
       toggleFullNavigationMode(true);
     }
   },1000);
+
+  // فتح تطبيق الرسائل برسالة جاهزة
+  let smsURL = "sms:" + phone + "?body=" + encodeURIComponent(message);
+  window.location.href = smsURL;
+
+  // بعد ثوانٍ قليلة نعرض خيار الاتصال المباشر
+  setTimeout(function(){
+
+    let callNow = confirm(
+      "هل تريد الاتصال بالمستشفى الآن أيضاً؟\n" + hospitalName
+    );
+
+    if(callNow){
+      window.location.href = "tel:" + phone;
+    }
+
+  }, 2500);
+
 }
+
 
 function findNearestHospital(){
 
