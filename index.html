@@ -3369,6 +3369,40 @@ function toggleVoiceNavigation(){
 
 }
 
+
+function translateInstruction(text){
+
+  if(!text) return "";
+
+  return text
+    .replace(/Turn right/gi,"انعطف يميناً")
+    .replace(/Turn left/gi,"انعطف يساراً")
+    .replace(/Continue straight/gi,"تابع السير مباشرة")
+    .replace(/Continue/gi,"تابع السير")
+    .replace(/Keep right/gi,"ابقَ على اليمين")
+    .replace(/Keep left/gi,"ابقَ على اليسار")
+    .replace(/Slight right/gi,"انعطف قليلاً إلى اليمين")
+    .replace(/Slight left/gi,"انعطف قليلاً إلى اليسار")
+    .replace(/Sharp right/gi,"انعطف بقوة إلى اليمين")
+    .replace(/Sharp left/gi,"انعطف بقوة إلى اليسار")
+    .replace(/Head north/gi,"اتجه شمالاً")
+    .replace(/Head south/gi,"اتجه جنوباً")
+    .replace(/Head east/gi,"اتجه شرقاً")
+    .replace(/Head west/gi,"اتجه غرباً")
+    .replace(/Head northeast/gi,"اتجه شمال شرق")
+    .replace(/Head northwest/gi,"اتجه شمال غرب")
+    .replace(/Head southeast/gi,"اتجه جنوب شرق")
+    .replace(/Head southwest/gi,"اتجه جنوب غرب")
+    .replace(/At the roundabout/gi,"عند الدوار")
+    .replace(/Take the ramp/gi,"اسلك المخرج")
+    .replace(/Take exit/gi,"خذ المخرج")
+    .replace(/Make a U-turn/gi,"قم بالدوران للخلف")
+    .replace(/Destination reached/gi,"لقد وصلت إلى وجهتك")
+    .replace(/You have arrived at your destination/gi,"لقد وصلت إلى وجهتك");
+
+}
+
+
 function speakInstruction(text){
 
   if(!voiceNavigation){
@@ -3383,18 +3417,34 @@ function speakInstruction(text){
     return;
   }
 
+  text = translateInstruction(text);
+
   speechSynthesis.cancel();
 
-  let speech =
+  const speech =
   new SpeechSynthesisUtterance(text);
 
   speech.lang = "ar-SA";
   speech.rate = 1;
   speech.pitch = 1;
 
+  const voices =
+  speechSynthesis.getVoices();
+
+  const arabicVoice =
+  voices.find(v =>
+    v.lang &&
+    v.lang.startsWith("ar")
+  );
+
+  if(arabicVoice){
+    speech.voice = arabicVoice;
+  }
+
   speechSynthesis.speak(speech);
 
 }
+
 
 function speakFirstRouteInstruction(route){
 
