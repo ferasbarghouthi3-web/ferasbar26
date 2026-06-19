@@ -1445,6 +1445,29 @@ let lastOffRouteAlertTime = 0;
 let currentTravelMode = "car";
 let voiceNavigation = true;
 
+// Arabic voice navigation
+let arabicVoice = null;
+
+function loadArabicVoice(){
+
+  if(!("speechSynthesis" in window)){
+    return;
+  }
+
+  const voices = speechSynthesis.getVoices();
+
+  arabicVoice =
+  voices.find(v => v.lang && v.lang.toLowerCase().startsWith("ar")) ||
+  voices.find(v => v.name && /arabic|ar/i.test(v.name)) ||
+  null;
+
+}
+
+if("speechSynthesis" in window){
+  loadArabicVoice();
+  speechSynthesis.onvoiceschanged = loadArabicVoice;
+}
+
 // سرعة السيارة الفعلية من GPS الهاتف فقط
 let previousPosition = null;
 let previousTime = null;
@@ -3370,38 +3393,77 @@ function toggleVoiceNavigation(){
 }
 
 
-function translateInstruction(text){
+
+function cleanInstructionText(text){
 
   if(!text) return "";
 
-  return text
-    .replace(/Turn right/gi,"انعطف يميناً")
-    .replace(/Turn left/gi,"انعطف يساراً")
-    .replace(/Continue straight/gi,"تابع السير مباشرة")
-    .replace(/Continue/gi,"تابع السير")
-    .replace(/Keep right/gi,"ابقَ على اليمين")
-    .replace(/Keep left/gi,"ابقَ على اليسار")
-    .replace(/Slight right/gi,"انعطف قليلاً إلى اليمين")
-    .replace(/Slight left/gi,"انعطف قليلاً إلى اليسار")
+  return String(text)
+    .replace(/<[^>]*>/g," ")
+    .replace(/&nbsp;/g," ")
+    .replace(/&amp;/g,"و")
+    .replace(/\s+/g," ")
+    .trim();
+
+}
+
+function translateInstruction(text){
+
+  text = cleanInstructionText(text);
+
+  if(!text) return "";
+
+  let t = text;
+
+  t = t
+    .replace(/You have arrived at your destination\.?/gi,"لقد وصلت إلى وجهتك")
+    .replace(/Destination reached\.?/gi,"لقد وصلت إلى وجهتك")
+    .replace(/Arrive at destination\.?/gi,"لقد وصلت إلى وجهتك")
+
+    .replace(/Make a U-turn/gi,"قم بالدوران للخلف")
+    .replace(/Turn sharp right/gi,"انعطف بقوة إلى اليمين")
+    .replace(/Turn sharp left/gi,"انعطف بقوة إلى اليسار")
     .replace(/Sharp right/gi,"انعطف بقوة إلى اليمين")
     .replace(/Sharp left/gi,"انعطف بقوة إلى اليسار")
-    .replace(/Head north/gi,"اتجه شمالاً")
-    .replace(/Head south/gi,"اتجه جنوباً")
-    .replace(/Head east/gi,"اتجه شرقاً")
-    .replace(/Head west/gi,"اتجه غرباً")
+    .replace(/Turn slight right/gi,"انعطف قليلاً إلى اليمين")
+    .replace(/Turn slight left/gi,"انعطف قليلاً إلى اليسار")
+    .replace(/Slight right/gi,"انعطف قليلاً إلى اليمين")
+    .replace(/Slight left/gi,"انعطف قليلاً إلى اليسار")
+    .replace(/Turn right/gi,"انعطف يميناً")
+    .replace(/Turn left/gi,"انعطف يساراً")
+    .replace(/Bear right/gi,"اتجه قليلاً إلى اليمين")
+    .replace(/Bear left/gi,"اتجه قليلاً إلى اليسار")
+    .replace(/Keep right/gi,"ابقَ على اليمين")
+    .replace(/Keep left/gi,"ابقَ على اليسار")
+    .replace(/Continue straight/gi,"تابع السير مباشرة")
+    .replace(/Continue/gi,"تابع السير")
+    .replace(/Go straight/gi,"تابع السير مباشرة")
+
     .replace(/Head northeast/gi,"اتجه شمال شرق")
     .replace(/Head northwest/gi,"اتجه شمال غرب")
     .replace(/Head southeast/gi,"اتجه جنوب شرق")
     .replace(/Head southwest/gi,"اتجه جنوب غرب")
+    .replace(/Head north/gi,"اتجه شمالاً")
+    .replace(/Head south/gi,"اتجه جنوباً")
+    .replace(/Head east/gi,"اتجه شرقاً")
+    .replace(/Head west/gi,"اتجه غرباً")
+    .replace(/Head/gi,"اتجه")
+
+    .replace(/At the roundabout, take the ([0-9]+)(st|nd|rd|th) exit/gi,"عند الدوار، خذ المخرج رقم $1")
     .replace(/At the roundabout/gi,"عند الدوار")
-    .replace(/Take the ramp/gi,"اسلك المخرج")
+    .replace(/Take the ([0-9]+)(st|nd|rd|th) exit/gi,"خذ المخرج رقم $1")
     .replace(/Take exit/gi,"خذ المخرج")
-    .replace(/Make a U-turn/gi,"قم بالدوران للخلف")
-    .replace(/Destination reached/gi,"لقد وصلت إلى وجهتك")
-    .replace(/You have arrived at your destination/gi,"لقد وصلت إلى وجهتك");
+    .replace(/Take the ramp/gi,"اسلك المخرج")
+
+    .replace(/onto/gi,"إلى")
+    .replace(/on/gi,"على")
+    .replace(/toward/gi,"باتجاه")
+    .replace(/for ([0-9.]+) km/gi,"لمسافة $1 كيلومتر")
+    .replace(/for ([0-9.]+) m/gi,"لمسافة $1 متر");
+
+  return t;
 
 }
-
 
 function speakInstruction(text){
 
@@ -3413,38 +3475,31 @@ function speakInstruction(text){
     return;
   }
 
+  text = translateInstruction(text);
+
   if(!text || text.trim() === ""){
     return;
   }
 
-  text = translateInstruction(text);
-
   speechSynthesis.cancel();
 
-  const speech =
-  new SpeechSynthesisUtterance(text);
+  loadArabicVoice();
+
+  const speech = new SpeechSynthesisUtterance(text);
 
   speech.lang = "ar-SA";
-  speech.rate = 1;
+  speech.rate = 0.95;
   speech.pitch = 1;
-
-  const voices =
-  speechSynthesis.getVoices();
-
-  const arabicVoice =
-  voices.find(v =>
-    v.lang &&
-    v.lang.startsWith("ar")
-  );
 
   if(arabicVoice){
     speech.voice = arabicVoice;
   }
 
-  speechSynthesis.speak(speech);
+  setTimeout(function(){
+    speechSynthesis.speak(speech);
+  }, 120);
 
 }
-
 
 function speakFirstRouteInstruction(route){
 
@@ -3499,14 +3554,14 @@ function updateRouteInfo(route){
 
   if(route.instructions && route.instructions.length > 0){
 
-    lastRouteInstructionText = route.instructions[0].text || "تابع المسار";
+    lastRouteInstructionText = translateInstruction(route.instructions[0].text) || "تابع المسار";
 
     instructionsHtml =
     route.instructions
     .slice(0,8)
     .map((instruction,index)=>{
 
-      return `${index + 1}. ${instruction.text}`;
+      return `${index + 1}. ${translateInstruction(instruction.text)}`;
 
     })
     .join("<br>");
@@ -3754,7 +3809,8 @@ function drawRoute(hospital){
   L.Routing.control({
 
     router: L.Routing.osrmv1({
-      profile: currentTravelMode
+      profile: currentTravelMode,
+      language: 'ar'
     }),
 
     waypoints:[
