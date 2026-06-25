@@ -1359,6 +1359,7 @@ var map = L.map("map").setView([31.9038,35.2034],11);
     roadsPane: شبكة الطرق الرمادية فوق الأحياء
     routePane: خط المسار الأزرق فوق كل الطبقات المضلعة
     healthPane: المستشفيات فوق المسار والطبقات
+    userPane: مؤشر الموقع فوق كل الطبقات
 ========================== */
 
 map.createPane("boundaryPane");
@@ -1380,6 +1381,11 @@ map.getPane("routePane").style.pointerEvents = "none";
 map.createPane("healthPane");
 map.getPane("healthPane").style.zIndex = 1300;
 map.getPane("healthPane").style.pointerEvents = "auto";
+
+/* مؤشر الموقع فوق كل اللايرات والمسار والمستشفيات */
+map.createPane("userPane");
+map.getPane("userPane").style.zIndex = 2500;
+map.getPane("userPane").style.pointerEvents = "auto";
 
 /* =========================
     BASEMAPS
@@ -1454,9 +1460,12 @@ let lastSpokenInstruction = "";
 let livingLayerGlobal = null;
 let accessibilityLayer = L.layerGroup().addTo(map);
 
-const rerouteDistanceMeters = 20;
+const rerouteDistanceMeters = 60;
 const offRouteDistanceMeters = 50;
 const offRouteAlertDelay = 8000;
+
+// لتحسين حركة مؤشر الموقع مع خط المسار
+const snapToRouteMaxMeters = 35;
 
 /* =========================
     LOGICAL TRAVEL SPEEDS
@@ -1951,6 +1960,106 @@ function distanceToRouteMeters(point, routeCoordinates){
 
 }
 
+
+function getClosestPointOnRoute(point, routeCoordinates){
+
+  if(!routeCoordinates || routeCoordinates.length < 2){
+    return null;
+  }
+
+  let minDistance = Infinity;
+  let bestPoint = null;
+
+  let latScale = 111320;
+  let lonScale = 111320 * Math.cos(point[0] * Math.PI / 180);
+
+  let px = point[1] * lonScale;
+  let py = point[0] * latScale;
+
+  for(let i = 0; i < routeCoordinates.length - 1; i++){
+
+    let a = routeCoordinates[i];
+    let b = routeCoordinates[i + 1];
+
+    let ax = a.lng * lonScale;
+    let ay = a.lat * latScale;
+    let bx = b.lng * lonScale;
+    let by = b.lat * latScale;
+
+    let dx = bx - ax;
+    let dy = by - ay;
+
+    let t = 0;
+
+    if(dx !== 0 || dy !== 0){
+      t = ((px - ax) * dx + (py - ay) * dy) / (dx * dx + dy * dy);
+      t = Math.max(0, Math.min(1, t));
+    }
+
+    let closestX = ax + t * dx;
+    let closestY = ay + t * dy;
+
+    let d = Math.sqrt(
+      Math.pow(px - closestX, 2) +
+      Math.pow(py - closestY, 2)
+    );
+
+    if(d < minDistance){
+      minDistance = d;
+      bestPoint = [closestY / latScale, closestX / lonScale];
+    }
+
+  }
+
+  return {
+    point:bestPoint,
+    distance:minDistance
+  };
+
+}
+
+function getDisplayLocationForMarker(gpsLocation){
+
+  if(currentRouteCoordinates && currentRouteCoordinates.length > 1){
+
+    let closest = getClosestPointOnRoute(gpsLocation, currentRouteCoordinates);
+
+    if(
+      closest &&
+      closest.point &&
+      closest.distance <= snapToRouteMaxMeters
+    ){
+      return closest.point;
+    }
+
+  }
+
+  return gpsLocation;
+
+}
+
+function keepUserMarkerOnTop(){
+
+  let userPane = map.getPane("userPane");
+
+  if(userPane){
+    userPane.style.zIndex = 2500;
+  }
+
+  if(userMarker){
+
+    if(userMarker.setZIndexOffset){
+      userMarker.setZIndexOffset(50000);
+    }
+
+    if(userMarker.bringToFront){
+      userMarker.bringToFront();
+    }
+
+  }
+
+}
+
 function showOffRouteWarning(){
 
   let warning = document.getElementById("offRouteWarning");
@@ -2008,6 +2117,10 @@ const arrowIcon = L.divIcon({
 
 function updateUserMarker(newLocation){
 
+  // نخلي المؤشر يظهر على أقرب نقطة من خط المسار إذا كان قريباً منه،
+  // وهذا يجعل الحركة أهدأ وأدق فوق المسار بدل القفز بسبب اهتزاز GPS.
+  const displayLocation = getDisplayLocationForMarker(newLocation);
+
   let angle = 0;
 
   if(lastLocation){
@@ -2016,20 +2129,33 @@ function updateUserMarker(newLocation){
 
       lastLocation[0],
       lastLocation[1],
-      newLocation[0],
-      newLocation[1]
+      displayLocation[0],
+      displayLocation[1]
 
     );
 
-    currentBearing = angle;
+    // لا نغير اتجاه السهم إذا الحركة بسيطة جداً حتى لا يهتز المؤشر.
+    let movedMeters = distance(
+      lastLocation[0],
+      lastLocation[1],
+      displayLocation[0],
+      displayLocation[1]
+    ) * 1000;
+
+    if(movedMeters > 2){
+      currentBearing = angle;
+    }
 
   }
 
   if(!userMarker){
 
-    userMarker = L.marker(newLocation,{
+    userMarker = L.marker(displayLocation,{
 
-      icon:arrowIcon
+      pane:"userPane",
+      icon:arrowIcon,
+      zIndexOffset:50000,
+      interactive:true
 
     })
     .addTo(map)
@@ -2039,9 +2165,15 @@ function updateUserMarker(newLocation){
 
   else{
 
-    userMarker.setLatLng(newLocation);
+    userMarker.setLatLng(displayLocation);
+
+    if(userMarker.setZIndexOffset){
+      userMarker.setZIndexOffset(50000);
+    }
 
   }
+
+  keepUserMarkerOnTop();
 
   let navigationAngle = getNavigationAngle();
 
@@ -2053,7 +2185,7 @@ function updateUserMarker(newLocation){
   // الكاميرا تتبع الحركة فقط، بدون تدوير الخريطة.
   applyNavigationMode(currentBearing || navigationAngle);
 
-  lastLocation = newLocation;
+  lastLocation = displayLocation;
 
 }
 
@@ -2707,6 +2839,8 @@ function initLayers(data){
       }
 
     }
+
+    keepUserMarkerOnTop();
 
   }
 
@@ -3769,6 +3903,7 @@ function drawRoute(hospital){
       if(healthPane){
         healthPane.style.zIndex = 1300;
       }
+      keepUserMarkerOnTop();
     },100);
 
   });
